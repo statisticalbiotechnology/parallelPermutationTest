@@ -32,6 +32,7 @@ for ls in listsizes:
 
 ![alt text](/figures/comparison.png)
 
+Please check the notebook for the code of the algorithm's and to see how the experiment was set-up.
 ## How the parallization works.
 
 It's highly recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow the explanation of the parallelization implementation.
