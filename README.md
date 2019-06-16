@@ -13,7 +13,7 @@ Only Python-specific requirements are Numba, Numpy, and Matplotlib.
 
 ## Run time performance increase.
 
-The GPU allows for substantial speed up for larger matrices. It speeds up both thicker and smaller matrices (see figure one below).
+The GPU allows for substantial speed up for larger matrices.
 
 
 ![alt text](/figures/comparison.png)
