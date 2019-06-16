@@ -36,7 +36,7 @@ The GPU allows for substantial speed up for larger matrices. It speeds up both t
 
 ## How the parallization works.
 
-It's recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow this parallelization explanation:
+It's highly recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow the explanation of the parallelization implementation.
 
 To obtain the sought of permutations N(m,m+n), a matrix can be created and then recursevely fill the entries for each N(j,k) using the relation(order of don't matter):
 
