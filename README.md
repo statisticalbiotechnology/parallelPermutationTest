@@ -39,6 +39,7 @@ The GPU allows for substantial speed up for larger matrices. It speeds up both t
 It's recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow this parallelization explanation:
 
 To obtain the sought of permutations N(m,m+n), a matrix can be created and then recursevely fill the entries for each N(j,k) using the relation(order of don't matter):
+
 <a href="https://www.codecogs.com/eqnedit.php?latex=N(j,k)=&space;N(j-1,k-1)$\bigoplus$&space;z_{k}&space;&plus;&space;N(j,k-1)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?N(j,k)=&space;N(j-1,k-1)$\bigoplus$&space;z_{k}&space;&plus;&space;N(j,k-1)" title="N(j,k)= N(j-1,k-1)$\bigoplus$ z_{k} + N(j,k-1)" /></a>
 
 The matrix looks as follows
