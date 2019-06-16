@@ -36,18 +36,21 @@ The GPU allows for substantial speed up for larger matrices. It speeds up both t
 
 ## How the parallization works.
 
-To obtain the sought permutations N(m,m+n) an matrix can be build up where each N(j,k) is dependent on the previous cacluated permuations N(j-1,k-1) and N(j,k-1). The matrix looks as follows
+It's recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow this parallelization explanation:
+
+To obtain the sought of permutations N(m,m+n)  a matrix can be created and then recursevely fill up this matrix for each N(j,k) using the relation N(j,k)=shift(N(j - 1,k - 1)) + N(j,k-1) (order of don't matter). The matrix looks as follows
 
 ![alt text](/figures/whole_array.png)
 
-To see the parallization pattern only the 2D array of j and k has to be considered, see figure below.
+Only the 2D array of j and k is sufficient to see the parallelization-pattern, see figure below.
 
 ![alt text](/figures/vector_relatiness.png)
 
-From the figure one relized for a fixed k, each j element is independent of eachother. This makes it possible to paralelly calucate each j element. Futhermore, this can is done for each consecuative k in the matrix.
+From the figure above, one realizes that for a fixed k, each adjacent j-element is independent of each other. Hence, it's possible to calculate each j element in that row parallelly. Furthermore, each consecutive k row is calculated in this manner.
 
-![alt text](/figures/how_they_are parallized.png)
 
-This make possible to just loop over k to to fnally obtain the sought N(m,m+n).
+![alt text](/figures/how_they_are_parallized.png)
+
+The matrix is calculated in a loop over k to finally obtain the sought of N(m,m+n).
 
 ![alt text](/figures/extraxt_the_wanted_array.png)
