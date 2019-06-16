@@ -38,7 +38,7 @@ The GPU allows for substantial speed up for larger matrices. It speeds up both t
 
 It's recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow this parallelization explanation:
 
-To obtain the sought of permutations N(m,m+n)  a matrix can be created and then recursevely fill the entries for each N(j,k) using the relation N(j,k)=shift(N(j - 1,k - 1)) + N(j,k-1) (order of don't matter). The matrix looks as follows
+To obtain the sought of permutations N(m,m+n), a matrix can be created and then recursevely fill the entries for each N(j,k) using the relation N(j,k)=shift(N(j - 1,k - 1)) + N(j,k-1) (order of don't matter). The matrix looks as follows
 
 ![alt text](/figures/whole_array1.png)
 
@@ -54,3 +54,13 @@ From the figure above, one realizes that for a fixed k, each adjacent j-element 
 The matrix is calculated in a loop over k to finally obtain the sought of N(m,m+n).
 
 ![alt text](/figures/extraxt_the_wanted_array.png)
+
+## Authors
+
+* **Markus Ekvall** 
+
+## Acknowledgments
+
+* Lukas Käll and Micheal Höhle
+* Pagano and Tritchler(1983), and Zimmerman (1985) for unparalleled version of the shift-method.
+
