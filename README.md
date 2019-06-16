@@ -50,7 +50,7 @@ Only the 2D array of j and k is sufficient to see the parallelization-pattern, s
 
 ![alt text](/figures/vector_relatiness.png)
 
-From the figure above, one realizes that for a fixed k, each adjacent j-element is independent of each other. Hence, it's possible to calculate each j element in that row parallelly. Furthermore, each consecutive k row is calculated in this manner.
+From the figure above, one realizes that for a fixed k, each j-element in that kth row is independent of each other. Hence, it's possible to calculate each j element in that row parallelly. Furthermore, each k row is consecutively calculated in this manner.
 
 
 ![alt text](/figures/how_they_are_parallized.png)
