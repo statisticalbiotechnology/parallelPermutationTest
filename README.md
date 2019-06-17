@@ -13,11 +13,26 @@ Only Python-specific requirements are Numba, Numpy, and Matplotlib.
 
 ## Run time performance increase.
 
-The GPU allows for substantial speed up for larger matrices. It speeds up both thicker and smaller matrices (see figure one below).
+The GPU allows for substantial speed up for larger matrices.
+
+```
+listsizes = [20,60,120,160,200]
+args_list = list()
+for ls in listsizes:
+    x = list(np.random.randint(0,400,ls))
+    y = list(np.random.randint(0,200,ls))
+    m = len(x)
+    n = len(y)
+    z = x + y;z.sort()
+    S = sum(z[m:])
+    dtype = np.uint16
+    args_list.append([m,n,S,z,dtype])
+```
 
 
 ![alt text](/figures/comparison.png)
 
+Please check the notebook for the code of the algorithm's and to see how the experiment was set-up.
 ## How the parallization works.
 
 It's highly recommended to read https://github.com/hoehleatsu/permtest/blob/master/computation.pdf to be able to follow the explanation of the parallelization implementation.
