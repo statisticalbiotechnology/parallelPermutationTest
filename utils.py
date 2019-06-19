@@ -18,8 +18,8 @@ def significance_of_mean(a,b,num_bin = None, data_type=np.float64): #
     
     
 
-    #bins = np.linspace(min(ab), max(ab), num_bin)    
-    bins = np.linspace(np.floor(min(ab)), np.ceil(max(ab)), num_bin)
+    bins = np.linspace(min(ab), max(ab), num_bin)    
+    #bins = np.linspace(np.floor(min(ab)), np.ceil(max(ab)), num_bin)
     digitized = np.digitize(ab, bins)
     
     if len(a)>len(b):
@@ -90,7 +90,8 @@ def significance_of_mean_cuda(a,b,num_bin = None, dtype_v=np.uint64, dtype_A=np.
     
     if not num_bin:
         num_bin = np.ceil(max(z)) - np.floor(min(z)) + 1
-    bins = np.linspace(np.floor(min(z)), np.ceil(max(z)), num_bin)
+    bins = np.linspace(min(z), max(z), num_bin)    
+    #bins = np.linspace(np.floor(min(z)), np.ceil(max(z)), num_bin)
     
 
     digitized = np.digitize(z, bins).astype(dtype_v) - 1   
