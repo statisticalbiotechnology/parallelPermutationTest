@@ -16,17 +16,31 @@ Only Python-specific requirements are Numba, Numpy, and Matplotlib.
 The GPU allows for substantial speed up for larger matrices.
 
 ```
-listsizes = [20,60,120,160,200]
-args_list = list()
-for ls in listsizes:
-    x = list(np.random.randint(0,400,ls))
-    y = list(np.random.randint(0,200,ls))
-    m = len(x)
-    n = len(y)
-    z = x + y;z.sort()
-    S = sum(z[m:])
-    dtype = np.uint16
-    args_list.append([m,n,S,z,dtype])
+listsizes = [20,60,120,160]
+plain_shift = list()
+gpu_shift = list()
+bins = 200
+for size in listsizes:
+    np.random.seed(1)
+    A = np.asarray([np.random.beta(2.0,5.0,size) for _ in range(5)])
+    B = np.asarray([np.random.beta(2.0,5.0,size) for _ in range(5)])
+    start = time.time()
+    P = calibration_test(A,B)
+    end = time.time()
+    plain_shift.append(round(end - start,3))
+    print("Plain")
+    print(round(end - start,3))
+    
+    start = time.time()
+    SGM = significance_of_mean_cuda(bins,dtype_v=np.uint32,dtype_A=np.float64)
+    PC = SGM.run(A,B)
+    end = time.time()
+    end = time.time()
+    gpu_shift.append(round(end - start,3))
+    print("GPU")
+    print(round(end - start,3))
+    
+    print(np.allclose(PC,P))
 ```
 
 
@@ -57,6 +71,18 @@ From the figure above, one realizes that for a fixed k, each j-element in that k
 The matrix is calculated in a loop over k to finally obtain the sought of N(m,m+n).
 
 ![alt text](/figures/extraxt_the_wanted_array.png)
+
+The algorithm becomes much more memory efficient then a regular one since the whole array do not have to be loaded into working memory directly. It is sufficient to have two sub-array that alternate between A0 and A1 between each loop over k. This memory efficiency makes to calculate a vast amount of samples at once onto the GPU. It works as follows:
+A0 is initialized.
+1. Calculate A1 from A0.
+2. Let A1 be A0, and A0 be A1.
+Repeat K times.
+
+![alt text](/figures/A0_A1.png)
+
+The necessary part of the final A1 for p-values calculations will not be affected by this routine, and it should decrease memory from:
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=O(SM(M&plus;N))=O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?O(SM(M&plus;N))=O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" title="O(SM(M+N))=O(SM^{2}+SMN)\ to \ O(2SM)=O(SM)" /></a>
 
 ## Authors
 
