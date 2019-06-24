@@ -130,7 +130,9 @@ def exact_perm_numba_shift(m, n, S, z, dtype_v, dtype_A):
     for k in range(1,(m+n)+1):
         N_cuda[:,k -1,0] = table(z[0:k],S )
     
-    A = N_cuda.copy()
+    #A = N_cuda.copy()
+    A = N_cuda
+    
     blockdim = (256, 3)
     griddim = (int(np.ceil((NN )/ blockdim[0])), int(np.ceil(NM/blockdim[1] + 1)))
     A = np.ascontiguousarray(A) 
