@@ -73,9 +73,14 @@ The matrix is calculated in a loop over k to finally obtain the sought of N(m,m+
 ![alt text](/figures/extraxt_the_wanted_array.png)
 
 The algorithm becomes much more memory efficient then a regular one since the whole array do not have to be loaded into working memory directly. It is sufficient to have two sub-array that alternate between A0 and A1 between each loop over k. This memory efficiency makes to calculate a vast amount of samples at once onto the GPU. It works as follows:
+
+
 A0 is initialized.
+
+
 1. Calculate A1 from A0.
 2. Let A1 be A0, and A0 be A1.
+
 Repeat K times.
 
 ![alt text](/figures/A0_A1.png)
