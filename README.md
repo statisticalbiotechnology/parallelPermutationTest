@@ -87,7 +87,7 @@ Repeat K times.
 
 The necessary part of the final A1 for p-values calculations will not be affected by this routine, and it should decrease memory from:
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=O(SM(M&plus;N))=O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?O(SM(M&plus;N))=O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" title="O(SM(M+N))=O(SM^{2}+SMN)\ to \ O(2SM)=O(SM)" /></a>
+<a href="https://www.codecogs.com/eqnedit.php?latex=O((S&plus;1)M(M&plus;N))=O(SM^{2}&plus;SMN&plus;M^{2}&plus;MN)=&space;O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" target="_blank"><img src="https://latex.codecogs.com/gif.latex?O((S&plus;1)M(M&plus;N))=O(SM^{2}&plus;SMN&plus;M^{2}&plus;MN)=&space;O(SM^{2}&plus;SMN)\&space;to&space;\&space;O(2SM)=O(SM)" title="O((S+1)M(M+N))=O(SM^{2}+SMN+M^{2}+MN)= O(SM^{2}+SMN)\ to \ O(2SM)=O(SM)" /></a>
 
 ## Authors
 
