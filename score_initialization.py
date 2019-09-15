@@ -19,7 +19,6 @@ class score_initialization(object):
                 z_d[z_item] += 1
                 z_v.append(z_d[z_item])
             z_k.append(z_item)
-
         return z_k, z_d, z_v
 
     def _check_for_successor(self, z_k, i, v):
@@ -98,3 +97,16 @@ class score_initialization(object):
         """
         Z, L  = self._score_lists(digitized_score)
         return self.score_to_array(Z, L)
+
+""" def _score_list(self, ze, z_k, z_d, z_v):
+        for i, z_item in enumerate(ze):
+            if not z_item in z_k:
+                z_k[i] = z_item
+                z_d[z_item] = 1
+                z_v[i] = 1
+            else:
+                
+                z_k[i] = z_item
+                z_d[z_item] += 1
+                z_v[z_k == z_item] = z_d[z_item]
+        return z_k.tolist(), z_d, z_v.tolist() """
