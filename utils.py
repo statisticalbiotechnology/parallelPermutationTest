@@ -1,6 +1,8 @@
 import numpy as np
 from numba import cuda
-
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def table(val, S):
     table = np.zeros(S + 1)
@@ -147,4 +149,48 @@ def exact_perm_numba_shift(m, n, S, z, dtype_v, dtype_A):
     stream.synchronize()
     return A
 
+def getNumerator(m, n, S, z, dtype):
+    N = np.zeros([S + 1, m], dtype)
+    N_old = N.copy()
+    
+    for i in range(1,(m+n)+1):
+        for j in range(1, m +1):
+            for s in range(S+1):
+                if i < j:
+                    N[s,j-1] = 0
+                elif j == 1 and z[i-1] == s:
+                    N[s,j-1] = N_old[s,j-1] + 1
+                elif j == 1 and z[i-1] != s:
+                    N[s,j-1] = N_old[s,j-1]
+                elif j > 1 and z[i-1] <= s:
+                    N[s,j-1] = N_old[s - z[i -1], j-2] + N_old[s,j-1]
+                elif j > 1 and z[i-1] > s:
+                    N[s,j-1] = N_old[s,j-1]
+    
+        N_old = N.copy()
+        
+    return N_old[:, -1]
 
+def pValue(Numerator, sample):
+    return np.round((Numerator / np.sum(Numerator))[sum(sample):].sum(), 3)
+
+def getdf(P, num_examples):
+    P.sort()
+    p_arr = np.array(P)
+    offset = 1.0/float(num_examples)
+    ideal_arr = np.linspace(offset,1.0-offset,num_examples)
+    Pdf = pd.DataFrame({'Observed p-value':p_arr,'Theoretical p-value':ideal_arr})
+    return Pdf
+
+def my_scatter_plot(df,save_name):
+    sns.set(style="white")
+    sns.set_context("talk")
+    low = min(df["Theoretical p-value"])
+    hi = max(df["Theoretical p-value"])
+    f, ax = plt.subplots(figsize=(7, 7))
+    ax.set(xscale="log", yscale="log")
+    g=sns.regplot(x='Theoretical p-value', y ='Observed p-value', data=df,  ax=ax, fit_reg=False, scatter_kws={"s": 5})
+    g.plot([low,hi], [low,hi], 'k-', linewidth=.5)
+    sns.despine()
+    f.tight_layout()
+    f.savefig(save_name)

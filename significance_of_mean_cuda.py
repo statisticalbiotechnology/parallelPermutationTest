@@ -25,13 +25,13 @@ class significance_of_mean_cuda(object):
         self.dtype_v = dtype_v
         self.dtype_A = dtype_A
         if self.dtype_v == np.uint16 and self.dtype_A == np.uint32:
-            self.get_perm = fill_array_u4_v_u2
+            self._get_perm = fill_array_u4_v_u2
 
         elif self.dtype_v == np.uint16 and self.dtype_A == np.float64:
-            self.get_perm = fill_array_f8_v_u2
+            self._get_perm = fill_array_f8_v_u2
             
         elif self.dtype_v == np.uint32 and self.dtype_A == np.float64:
-            self.get_perm = fill_array_f8_v_u4
+            self._get_perm = fill_array_f8_v_u4
         else:
             raise ValueError("The selected value tkype combination is currently not available!")
    
@@ -92,9 +92,8 @@ class significance_of_mean_cuda(object):
         Returns:
             The two last calculated sub-arrays (onto the GPU), dA0 and dA1.
         """
-        for i, k in enumerate(range(1, length + 1)):
-                dk = self.dtype_v(k)
-                self.get_perm[blockspergrid, threadsperblock, stream](dA0, dA1, dk, dz, dS)
+        for i in range(1, length + 1):
+                self._get_perm[blockspergrid, threadsperblock, stream](dA0, dA1, self.dtype_v(i), dz, dS)
                 tmp = dA0
                 dA0 = dA1
                 dA1 = tmp  
@@ -132,7 +131,7 @@ class significance_of_mean_cuda(object):
             P[i] = np.sum(pmf[int(sum(a_)):(int(S[i])+1)])
         return P
 
-    def exact_perm_numba_shift(self, m, n, S, z):
+    def _exact_perm_numba_shift(self, m, n, S, z):
         """Run the shift-method on the GPU.
         Args:
             m (int): Sample size of sample A
@@ -146,17 +145,8 @@ class significance_of_mean_cuda(object):
 
         A0 = np.zeros([int(np.max(S)) + 1, m, n_samples], self.dtype_A)
 
-        NN, NM, _ = A0[:,:,:].shape
-
-
-        """ TPB = 8
-        threadsperblock = (TPB**2, TPB // 2, TPB //2)
-        blockspergrid_x = int(math.ceil(A0.shape[0] / threadsperblock[0]))
-        blockspergrid_y = int(math.ceil(A0.shape[1] / threadsperblock[1]))
-        blockspergrid_z = int(math.ceil(A0.shape[2] / threadsperblock[2]))
-        blockspergrid = (blockspergrid_x, blockspergrid_y , blockspergrid_z) """
-        #print(threadsperblock)
-        #print(blockspergrid)
+        NN, NM, _ = A0[:, :, :].shape
+        
         threadsperblock = (64, 3, 2)
         blockspergrid = (int(np.ceil((NN)/ threadsperblock[0])),
                          int(np.ceil(NM/threadsperblock[1] + 1)),
@@ -167,7 +157,7 @@ class significance_of_mean_cuda(object):
         z, S, A0, A1 = self._ensure_contiguous(z, S, A0, A1)
         
         stream, dz, dS, dA0, dA1 = self._load_gpu(z,S,A0,A1)
-            
+        
         dA0, dA1 = self._run_calculations(dA0, dA1, dz, dS, m + n, threadsperblock, blockspergrid, stream, A0, A1)
         return self._get_calculated_array(dA0,dA1, A1,A0, stream, m)
         
@@ -195,11 +185,23 @@ class significance_of_mean_cuda(object):
 
         digitized = self._get_digitized_score(X, bins)
 
-        S = np.sum(digitized[:,m:],axis=1)
-
+        S = np.sum(digitized[:, m:], axis=1)
         
-        Z = self.exact_perm_numba_shift(int(m), int(n), S, digitized)
-
+        self.numerator = self._exact_perm_numba_shift(int(m), int(n), S, digitized)
+        self.p_values = self._calculate_p_values(self.numerator, n_samples, S, A, bins)
         
+    def get_numerator(self):
+        """Get numerator.
+        Returns:
+             numerator
+        """
+        return self.numerator
+    
+    def get_p_values(self):
+        """Get p-values.
+        Returns:
+             Get p-values
+        """
+        return self.p_values
 
-        return self._calculate_p_values(Z, n_samples, S, A ,bins)
+    
