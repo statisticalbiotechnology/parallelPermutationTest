@@ -32,19 +32,19 @@ for size in listsizes:
     print(round(end - start,3))
     
     start = time.time()
-    SGM = significance_of_mean_cuda(bins,dtype_v=np.uint32,dtype_A=np.float64)
-    PC = SGM.run(A,B)
+    SGM = significance_of_mean_cuda(bins,dtype_v=np.uint16,dtype_A=np.float64)
+    SGM.run(A,B)
+    P = SGM.get_p_values()
     end = time.time()
-    end = time.time()
-    gpu_shift.append(round(end - start,3))
-    print("GPU")
-    print(round(end - start,3))
+    t_gpu = end - start
+    gpu_shift.append(t_gpu)
+    print("GPU: ", t_gpu)
     
     print(np.allclose(PC,P))
 ```
 
 
-![alt text](/figures/comparison.png)
+![alt text](/figures/normal_N.png)
 
 ## Authors
 
