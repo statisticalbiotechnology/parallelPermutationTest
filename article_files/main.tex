@@ -1,4 +1,4 @@
-\documentclass[a4paper]{article}
+\documentclass[a4paper,11pt]{article}
 
 \usepackage[english]{babel}
 \usepackage[utf8x]{inputenc}
@@ -6,7 +6,6 @@
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{float}
-
 
 
 \usepackage[colorinlistoftodos]{todonotes}
@@ -17,40 +16,35 @@
 \usepackage{subfig}
 \usepackage{bm,nicefrac}
 \usepackage{comment}
-
+\usepackage{authblk}
 
 \newtheorem{mydef}{Definition}
 \newtheorem{myremark}{Remark}
 
-
-
 \usepackage{hyperref}
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=cyan,
-}
 
+\title{A parallelization of the calculation of prermutational distributions}
+\author[1]{Markus Ekvall}
+\author[2]{Micheal Höhle}
+\author[1]{Lukas Käll}
+\affil[1]{Science for Life Laboratory, School of Engineering Sciences in Chemistry, Biotechnology and Health,
+ KTH -- Royal Institute of Technology, Box 1031, 17121 Solna, Sweden}
+ \affil[2]{Department of Mathematics, Stocholm University,
+  SE-106 91 Stockholm, Sweden}
 
-
-
-
-
-\title{Parallelizing the Exact test}
-\author{Markus Ekvall, Micheal Höhle, and Lukas Käll}
 
 \addtolength{\textwidth}{1.8cm}
 
 \begin{document}
-\tableofcontents
 \maketitle
 
 \section{Abstract}
-The exact test is common practice within life sciences; however, it is slow to compute since the runtime grows combinatorially with a naive implementation. Nevertheless, continued development in the 1980s  led to a dynamic programming algorithm that computes the exact test in polynomial time. Albeit this significant run time reduction, the exact test has not yet become one of the predominant statistical tests for larger set-sizes. However, some further refinement could make the algorithm even faster–since it could become parallelizable–henceforth, making the exact test more attractive. Parallelization is possible by some nontrivial rearrangement of the structure of the algorithm. Making the computation parallel on a GPU gains additional orders of magnitude of speedup of this algorithm. Hence, the runtime of the exact test would essentially become a non-issue.
+Permutation tests offers a straight forward method to evaluae significance of differences in means of independent samples. However, they often seen as a last resort for assigning significance, as the running time of naive implementations  to slow grows combinatorially. Nevertheless, continued development in the 1980s introduceddynamic programming algorithms that computes exact permutation tests in polynomial time. Albeit this significant run time reduction, the exact test has not yet become one of the predominant statistical tests for larger set-sizes. However, some further refinement could make the algorithm even faster–since it could become parallelizable–henceforth, making the exact test more attractive. Parallelization is possible by some nontrivial rearrangement of the structure of the algorithm. Making the computation parallel on a GPU gains additional orders of magnitude of speedup of this algorithm. Here we demonstrate an implementation of exact permutation tests, for which the execution time would essentially become a non-issue for sample sizes up to X samples.
 
 \section{Introduction}
-The exact permutation test is a standard tool within life sciences and is especially valuable when the sample size is too small to use the asymptotical test. However, the exact test is unattractive computationally \cite{segal2018fast}. Nonetheless, this computational unattractiveness has been partially solved by a theorem by \cite{pagano_trichtler1983} and inspired a dynamic programming algorithm that has been made explicit by \cite{zimmermann1985}. This algorithm is effective compared with any naive approach; nevertheless, the popularity of the exact test for larger set sizes has not increased since this improvement. However, further refinement of the algorithm–it can be made parallelizable–could make it a more widely popular statistical tool.
+Permutation tests are frequently used for non-parametric testing and are especially valuable for smaller sample sizes. Such tetst can roughly be divided into  Monte Carlo-based sampling techiques\cite{segal2018fast}, and exact tests that derive full permutation distributions \todo{Citation here. Fisher?}.
+
+Exact tests are often seen as unatractive for larger sample sizes, as the number of permutation grows exponentially with the sample size. Nonetheless, such computational problems were partially overcome by a theorem by \cite{pagano_trichtler1983}, and inspired a dynamic programming algorithm that has been made explicit by \cite{zimmermann1985}. This algorithm is effective compared with any naive approach, however, the popularity of the exact test for larger set sizes has not attracted much attention the latest coupe of decades. However, further refinement of the algorithm–it can be made parallelizable–could make it a more widely popular statistical tool.
 
 Here's the sections of this paper: Firstly, the main objective–how to compute $p$-values with an exact test–is described in section \ref{sec:PvalueComputation}, a detailed explanation of the algorithm is presented in section \ref{sec:calcBottleneck}, a further description how this algorithm can be parallelizable is presented in section \ref{sec:paraAlgo}, and, finally, the result section \ref{sec:result}, comparing the empirical runtimes between the non-parallelized version and parallelized version.
 
@@ -65,7 +59,7 @@ The maximal sum obtained from a $m$-combinations of $\bm{z}$ is $\mathcal{S}$ (i
 
 \begin{align}
 \label{eq:pOfS}
-P(S = s) &= \frac{\text{\# $m$-combinations of $\bm{z}$ s.t. sum is equal to $s$}}{\text{\# $m$-combinations of $\bm{z}$}}, 
+P(S = s) &= \frac{\text{\# $m$-combinations of $\bm{z}$ s.t. sum is equal to $s$}}{\text{\# $m$-combinations of $\bm{z}$}},
 \end{align}
 where $0\leq s \leq \mathcal{S}$. From basic combinatorics the denominator of the above equation \ref{eq:pOfS} is equal to:
 
@@ -125,7 +119,7 @@ N(s,i,j) &= \textit{\# $j$-combinations from $z[1,\ldots,i]$ s.t. $\sum _{l=1}^{
 Now $N(s,i,j)$ is written in it's first primitive recursive form, i.e.,
 \begin{align}
 \label{eq:recursion1}
-N(s,i,j) = N(s,i-1,j)+ \phi (s,i,j) 
+N(s,i,j) = N(s,i-1,j)+ \phi (s,i,j)
 \end{align}
 
 With a placeholder-function that yet has to be decided explicitly, i.e.,
@@ -201,31 +195,31 @@ Below is a top-down algorithm of the recursion \label{eq:finalRecursion}.
 \State $\mathcal{S}$: Scale equal to the sum of the $m$ largest values in $z$.
 \State $z$: Concatenated vector of $x$ and $y$ with length $m+n$.
     \Procedure{NumberOfCombinations}{$m$, $n$, $\mathcal{S}$, $z$}
-    \State Allocate array $N_{i-1}[0...\mathcal{S},0...m]$ with zeros 
+    \State Allocate array $N_{i-1}[0...\mathcal{S},0...m]$ with zeros
     \State Allocate array $N_{i}[0...\mathcal{S},0...m]$ with zeros
     \For{$i=1$ to $(m + n) +1$}
         \For{$j=1$ to $m+1$}
             \For{$s=1$ to $\mathcal{S} +1$}
-                \If{$i < j$} \Comment{Sub-recursion \ref{eq:Subrecursion1}} \State $N_{i}[s,j-1]=0$ 
+                \If{$i < j$} \Comment{Sub-recursion \ref{eq:Subrecursion1}} \State $N_{i}[s,j-1]=0$
                 \ElsIf{$j==1$ and $z[i-1] == s$} \Comment{Sub-recursion \ref{eq:Subrecursion2} } \State $N_{i}[s,j-1]=N_{i-1}[s,j-1] + 1$
-                \ElsIf{$j==1$ and $z[i-1] \neq s$} \State $N_{i}[s,j-1]=N_{i-1}[s,j-1]$ 
-                \ElsIf{$j>1$ and $z[i-1] \leq s$} \Comment{Sub-recursion \ref{eq:Subrecursion3} } \State $N_{i}[s,j-1]=N_{i-1}[s-z[i-1],j-2] + N_{i-1}[s,j-1]$ 
+                \ElsIf{$j==1$ and $z[i-1] \neq s$} \State $N_{i}[s,j-1]=N_{i-1}[s,j-1]$
+                \ElsIf{$j>1$ and $z[i-1] \leq s$} \Comment{Sub-recursion \ref{eq:Subrecursion3} } \State $N_{i}[s,j-1]=N_{i-1}[s-z[i-1],j-2] + N_{i-1}[s,j-1]$
                 \ElsIf{$j>1$ and $z[i-1] > s$} \State $N_{i}[s,j-1]=N_{i-1}[s,j-1]$
                 \EndIf
             \EndFor
         \EndFor
         \State $N_{i-1} = N_{i}$; \Comment{Update $N_{i-1}$ for next iteration.}
     \EndFor
-        \State \Return $N_{i}[0...\mathcal{S},m]$ \Comment{By remark \ref{rm:finalN}: N_{m+n}[s,m]=N(s,m)$}
-        
+        \State \Return $N_{i}[0...\mathcal{S},m]$ \Comment{By remark \ref{rm:finalN}: $N_{m+n}[s,m]=N(s,m)$}
+
     \EndProcedure
 \end{algorithmic}
 \end{algorithm}
 \FloatBarrier
 
-The algorithm needs some explanation. Instead of using one extensive array $N[0\ldots \mathcal{S},$\ $0\ldots(m+n),0\ldots m]$, two smaller arrays, $N_{i-1}[0...\mathcal{S},0...m]$ and $N_{i}[0...\mathcal{S},0...m]$, are swapped and rewritten in each iteration of $i$ in an oscillatory fashion – to save memory. Notice that $N_{i}$ is not required to reset after line $24$ (this is especially nice on a GPU since there is no easy way to reset the entries.); this is possible since nothing is dependent on $N_{i}$ in the next iteration $i+1$, and any of the conditions between line $11$ and $19$ will entirely rewrite $N_{i}$ so it will be correct at $i+2$, where it will be used. 
+The algorithm needs some explanation. Instead of using one extensive array $N[0\ldots \mathcal{S},$\ $0\ldots(m+n),0\ldots m]$, two smaller arrays, $N_{i-1}[0...\mathcal{S},0...m]$ and $N_{i}[0...\mathcal{S},0...m]$, are swapped and rewritten in each iteration of $i$ in an oscillatory fashion – to save memory. Notice that $N_{i}$ is not required to reset after line $24$ (this is especially nice on a GPU since there is no easy way to reset the entries.); this is possible since nothing is dependent on $N_{i}$ in the next iteration $i+1$, and any of the conditions between line $11$ and $19$ will entirely rewrite $N_{i}$ so it will be correct at $i+2$, where it will be used.
 
-The reason that the latter approach saves memory is due to the former array requires $\mathcal{O}(\mathcal{S} \cdot (m+n) \cdot m)$, whereas the latter two arrays require $\mathcal{O}(\mathcal{S} \cdot m + \mathcal{S} \cdot m) = \mathcal{O}( 2 \cdot \mathcal{S} \cdot m)=\mathcal{O}(\mathcal{S} \cdot m)$. Moreover, this improvement in memory usage is a quintessential difference for the parallelized algorithm (the memory storage of the GPU can easily be a bottleneck). 
+The reason that the latter approach saves memory is due to the former array requires $\mathcal{O}(\mathcal{S} \cdot (m+n) \cdot m)$, whereas the latter two arrays require $\mathcal{O}(\mathcal{S} \cdot m + \mathcal{S} \cdot m) = \mathcal{O}( 2 \cdot \mathcal{S} \cdot m)=\mathcal{O}(\mathcal{S} \cdot m)$. Moreover, this improvement in memory usage is a quintessential difference for the parallelized algorithm (the memory storage of the GPU can easily be a bottleneck).
 
 A second point, notice the structure of the for-loops; they could easily have been arranged in whatever way and still obtain correct computations. However, the dimensions of the two arrays have to be adjusted appropriately related to the outer-most loop. Nevertheless, this specific order has a purpose–it is parallelizable–which will be described in the next section.
 
@@ -239,9 +233,9 @@ Here's a demonstration of one iteration of $i$, to make the mechanics of algorit
 \caption{Demonstration the computations of three entries of $N_{i}$.}\label{normal_calibration.png}
 \end{figure}
 
-The figure demonstrates three different calculations and all applies different conditions in recursion \ref{eq:finalRecursion}. Firstly, in the right array $N_{i}$, see entry $N_{i}(4,2)$, the arrows from $N_{i-1}$ indicates that it is dependent on entries $N_{i-1}(4,1)$ and $N_{i-1}(1=4-z_{i},1)$ from array $N_{i-1}$. The reason is that the entry $N_{i}(4,2)$ considers more than one element of $z$ (i.e., $j>1$), and the sum $s=4$ is more than $z_{i}=3$ (i.e.,. $s>z_{i}$). Hence, by condition \ref{eq:Subrecursion3}, by adding $N_{i-1}(4,1)$ and $N_{i-1}(1=4-z_{i},1)$ one obtains $N_{i}(4,2)$ (i.e., $N_{i}(4,2)=N_{i-1}(4,1) +N_{i-1}(1=4-z_{i},1)$). 
+The figure demonstrates three different calculations and all applies different conditions in recursion \ref{eq:finalRecursion}. Firstly, in the right array $N_{i}$, see entry $N_{i}(4,2)$, the arrows from $N_{i-1}$ indicates that it is dependent on entries $N_{i-1}(4,1)$ and $N_{i-1}(1=4-z_{i},1)$ from array $N_{i-1}$. The reason is that the entry $N_{i}(4,2)$ considers more than one element of $z$ (i.e., $j>1$), and the sum $s=4$ is more than $z_{i}=3$ (i.e.,. $s>z_{i}$). Hence, by condition \ref{eq:Subrecursion3}, by adding $N_{i-1}(4,1)$ and $N_{i-1}(1=4-z_{i},1)$ one obtains $N_{i}(4,2)$ (i.e., $N_{i}(4,2)=N_{i-1}(4,1) +N_{i-1}(1=4-z_{i},1)$).
 
-In the second example, see entry  in $N_{i}(3,1)$, it is only dependent on $N_{i-1}(3,0)$, and this is because it is only concerned with one element in $z$ (i.e., $j=1$). Furthermore, since $z_{i}=s=3$ one should apply condition $\ref{eq:Subrecursion2}$. Hence, one obtains $N_{i}(3,1)$ by adding $N_{i-1}(3,0)$ with one (i.e., $N_{i}(3,1)=N_{i-1}(3,0)+1$). 
+In the second example, see entry  in $N_{i}(3,1)$, it is only dependent on $N_{i-1}(3,0)$, and this is because it is only concerned with one element in $z$ (i.e., $j=1$). Furthermore, since $z_{i}=s=3$ one should apply condition $\ref{eq:Subrecursion2}$. Hence, one obtains $N_{i}(3,1)$ by adding $N_{i-1}(3,0)$ with one (i.e., $N_{i}(3,1)=N_{i-1}(3,0)+1$).
 
 Finally, see entry $N_{i}(1,2)$ in $N_{i}$, it is solely dependent on $N_{i-1}(1,1)$ because it considers more than one element in $z$ $(i.e., j>1)$, and the sum $s=2$ is less than $z_{i}=3$ (i.e., $s<z$). Thus, by condition \ref{eq:Subrecursion3},  $N_{i}(1,2)$ is obtained by taking $N_{i-1}(1,1)$ (i.e., $N_{i}(1,2)=N_{i-1}(1,1)).$
 
@@ -263,10 +257,7 @@ The meaning of parallelizing over two dimensions, is, in this case, to fix one o
 
 Out of the three variables, it is only necessary to find one such variable to fix, and instead of exhaustively check all possibilities, one can check recursion \ref{eq:finalRecursion} to see which variable is parallelizable. By comparing the left side to the right side, the only variable that is not dependent on contemporary action of itself is variable $i$ i.e., $N(s,i,j)=f(s,s-z_{j},i-1,j,j-1)$, and, furthermore, the other two variables is not possible to fix. Below is a verification that $N(s,i,j)$ is parallelizable given that $i$ is fixed.
 
-\newline
 \begin{comment}
-
-
 \subsubsection{Initiation: $i=0$}
 \label{subsubsec:v1}
 Recursion \ref{eq:Subrecursion1} (i.e., when $i=0$) is trivially parallelizable since it is not dependent on any previous calculations.
@@ -284,7 +275,7 @@ Between leaving iteration $i$ (e.g., $i=1$) and before incrementing $i\leftarrow
 When incrementing $i\leftarrow i+1$ (e.g., updating $i$ to $i=3$) yet again, the same arguments mentioned above can be re-used to prove parallelizability.
 
 \subsubsection{Termination: $i=(m+n)+2$}
-When arriving at line $8$ in algorithm \ref{sec:paraAlgo} and $i=(m+n)+2$, it will not enter the loop. By the maintenance of algorithm \ref{subsubsec:maintenance}, one can be sure that the computation of $N(0...\mathcal{S},(m+n),m)$ is correct. Since there is no computation after the for-loop-block, hence, there are no more modifications on $N(0...\mathcal{S},(m+n),m)$, and it is safe to return this array. 
+When arriving at line $8$ in algorithm \ref{sec:paraAlgo} and $i=(m+n)+2$, it will not enter the loop. By the maintenance of algorithm \ref{subsubsec:maintenance}, one can be sure that the computation of $N(0...\mathcal{S},(m+n),m)$ is correct. Since there is no computation after the for-loop-block, hence, there are no more modifications on $N(0...\mathcal{S},(m+n),m)$, and it is safe to return this array.
 
 
 
@@ -311,29 +302,36 @@ In the first experiment, $n_{bin}$ is the variable. Since $n_{bin}$ only changes
 
 In the second run time experiment, $n,m$ are the variables. Here $m=n$, therefore, the run time is $\mathcal{O}(n \cdot 2n)=\mathcal{O}(n^{2})$. This is demonstrated experimentally, see figure \ref{fig:normalN}.
 
-In both cases, the parallelized version has almost constant run time, and this is because the GPU calculates everything at the same speed until it reaches its max capacity. If that would be the case, one has to re-load the GPU, which would require additional time. Hence, for more massive datasets, the GPU plot would look more like a step-function. 
+In both cases, the parallelized version has almost constant run time, and this is because the GPU calculates everything at the same speed until it reaches its max capacity. If that would be the case, one has to re-load the GPU, which would require additional time. Hence, for more massive datasets, the GPU plot would look more like a step-function.
 
 \subsection{Calibration test}
-The distributions used are $A \sim \mathcal{N}(0,1)$ and $B \sim \mathcal{N}(\mu,1)$ where $\boldsymbol{\mu} = \{0, 0.2, 0.4, \ldots, 1.8, 2.0 \}$(i.e., performing $11$ experiments.). For all $\mu \in \boldsymbol{\mu}$, 21 different bin sizes are tested $n_{bin}=\{10,12,14,\ldots,38,40\}$. For each bin size, the difference and relative error of the $p$-value between $t$-test and exact test (i.e., $p_{exact}-p_{t-test}$  and $\frac{p_{exact}-p_{t-test}}{p_{t-test}}$) are plotted against $n_{bin}$. Furthermore, these following hyperparameters for each experiment: the set size for both $A$ and $B$ is $100$ (i.e., $|A|=|B|=100$.), and the sample size is $70$.
 
+The distributions used are $A \sim \mathcal{N}(0,1)$ and $B \sim \mathcal{N}(\mu,1)$ where $\boldsymbol{\mu} = \{0, 0.2, 0.4, \ldots, 1.8, 2.0 \}$(i.e., performing $11$ experiments.). For all $\mu \in \boldsymbol{\mu}$, 21 different bin sizes are tested $n_{bin}=\{10,12,14,\ldots,38,40\}$. \todo{What is meant by bin size in this context? Also, why do you say that you have different $\mu$, when your plots labels indicate a value of 0.4?} For each bin size, the difference and relative error of the $p$-value between $t$-test and exact test (i.e., $p_{exact}-p_{t-test}$  and $\frac{p_{exact}-p_{t-test}}{p_{t-test}}$) are plotted against $n_{bin}$. Furthermore, these following hyperparameters for each experiment: the set size for both $A$ and $B$ is $100$ (i.e., $|A|=|B|=100$.), and the sample size is $70$.
 
-\begin{figure}[H]
+\begin{figure}[h]
   \centering
-  \subfloat[Boxplot of the relative error with bin size as varaible.]{\includegraphics[width=0.5\textwidth]{box_plot_Diff_rel_2.jpg}\label{fig:noarmalS}}
-  \hfill
-  \subfloat[Errorplot of the relative error with bin size as varaible.]{\includegraphics[width=0.5\textwidth]{error_plot_Diff_rel_2.jpg}\label{fig:normalN}}
-  \caption{Relative error vs Bin size}
+  \begin{tabular}{cc}
+  \includegraphics[width=0.5\textwidth]{box_plot_Diff_rel_2.jpg}\label{fig:noarmalS} &  % TODO Redundat labeling
+  \includegraphics[width=0.5\textwidth]{error_plot_Diff_rel_2.jpg}\label{fig:normalN} \\
+  (a) & (b)
+  \end{tabular}
+  \caption{The relative error of $p$ values as a function of the the size of the discritization window, for samples from normal distributions with a difference in population means of 0.4 (a) as boxplots, and (b) as  XXX plot}
+\end{figure}
+\todo{Fill in type of plot at the XXXs!}
+\todo{is this the right interpretation of the words ``bin size'' in caption?}
+
+
+\begin{figure}[h]
+  \centering
+  \begin{tabular}{cc}
+  \includegraphics[width=0.5\textwidth]{box_plot_Diff_rel_6.jpg}\label{fig:noarmalS} & % TODO Redundat labeling
+  \includegraphics[width=0.5\textwidth]{error_plot_Diff_rel_6.jpg}\label{fig:normalN} \\
+  (a) & (b)
+  \end{tabular}
+\caption{The relative error of $p$ values as a function of the the size of the discritization window  for samples from normal distributions with a difference in population means of 1.0 (a) as boxplots, and (b) as XXX plot.}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \subfloat[Boxplot of the relative error with bin size as varaible.]{\includegraphics[width=0.5\textwidth]{box_plot_Diff_rel_6.jpg}\label{fig:noarmalS}}
-  \hfill
-  \subfloat[Errorplot of the relative error with bin size as varaible.]{\includegraphics[width=0.5\textwidth]{error_plot_Diff_rel_6.jpg}\label{fig:normalN}}
-  \caption{Relative error vs Bin size}
-\end{figure}
-
-{\bibliography{sample.bib}}
 \bibliographystyle{ieeetr}
+{\bibliography{sample.bib}}
 
 \end{document}
