@@ -23,14 +23,14 @@
 
 \usepackage{hyperref}
 
-\title{A parallelization of the calculation of prermutational distributions}
+\title{A parallelization of the calculation of permutation tests}
 \author[1]{Markus Ekvall}
 \author[2]{Micheal Höhle}
 \author[1]{Lukas Käll}
 \affil[1]{Science for Life Laboratory, School of Engineering Sciences in Chemistry, Biotechnology and Health,
  KTH -- Royal Institute of Technology, Box 1031, 17121 Solna, Sweden}
  \affil[2]{Department of Mathematics, Stocholm University,
-  SE-106 91 Stockholm, Sweden}
+  106 91 Stockholm, Sweden}
 
 
 \addtolength{\textwidth}{1.8cm}
@@ -39,10 +39,11 @@
 \maketitle
 
 \section{Abstract}
-Permutation tests offers a straight forward method to evaluae significance of differences in means of independent samples. However, they often seen as a last resort for assigning significance, as the running time of naive implementations  to slow grows combinatorially. Nevertheless, continued development in the 1980s introduceddynamic programming algorithms that computes exact permutation tests in polynomial time. Albeit this significant run time reduction, the exact test has not yet become one of the predominant statistical tests for larger set-sizes. However, some further refinement could make the algorithm even faster–since it could become parallelizable–henceforth, making the exact test more attractive. Parallelization is possible by some nontrivial rearrangement of the structure of the algorithm. Making the computation parallel on a GPU gains additional orders of magnitude of speedup of this algorithm. Here we demonstrate an implementation of exact permutation tests, for which the execution time would essentially become a non-issue for sample sizes up to X samples.
+
+Permutation tests are a straight forward method to assess if two group means are different in a independet two-sample situation. A major advantage of permutation tests is that no involved mathematical considerations about the distribution of the test statistic are needed -- a consideration which usually only apply in the case of large samples. Under the assumption of exchangability of the group labels they are, hence, particularly well suited for the evaluation in the small sample situation, because they provide the exact distribution of the test statistic. Even in the median sample size range, they have great value, because they allow a sensitivity analysis in order to determine to what extend the assumed large sample distribution of the test statistic applies. However, in this situation permutation tests are rarely applied, because the running time of naive implementations is too slow and grows exponentially\todo{check, if the right wording. Combinatorically I have not heard} with the sample size. Nevertheless, continued development in the 1980s introduced dynamic programming algorithms that computes exact permutation tests in polynomial time. Albeit this significant run time reduction, the exact test have not yet become one of the predominant statistical tests for medium sample size. In this paper we propose a computational parallelisation refinement of permutation tests, which could  help make permutation test more attractive. Parallelization is possible by nontrivial rearrangement of the structure of the algorithm. Making the computation parallel on a GPU gains additional orders of magnitude of speedup of this algorithm. Here we demonstrate an implementation of exact permutation tests, for which the execution time would essentially become a non-issue for sample sizes up to X samples. \todo{Say something or refer to an example or a situation, where this approach is particularly useful? Furthermore, one probably has to say a little bit more about when the large sample situation applies.}
 
 \section{Introduction}
-Permutation tests are frequently used for non-parametric testing and are especially valuable for smaller sample sizes. Such tetst can roughly be divided into  Monte Carlo-based sampling techiques\cite{segal2018fast}, and exact tests that derive full permutation distributions \todo{Citation here. Fisher?}.
+Permutation tests are frequently used for non-parametric testing and are especially valuable for smaller sample sizes. Such tests can roughly be divided into Monte Carlo-based sampling techiques\cite{segal2018fast}, and exact tests that derive full permutation distributions \todo{Citation here. Fisher?}.
 
 Exact tests are often seen as unatractive for larger sample sizes, as the number of permutation grows exponentially with the sample size. Nonetheless, such computational problems were partially overcome by a theorem by \cite{pagano_trichtler1983}, and inspired a dynamic programming algorithm that has been made explicit by \cite{zimmermann1985}. This algorithm is effective compared with any naive approach, however, the popularity of the exact test for larger set sizes has not attracted much attention the latest coupe of decades. However, further refinement of the algorithm–it can be made parallelizable–could make it a more widely popular statistical tool.
 
@@ -281,7 +282,9 @@ When arriving at line $8$ in algorithm \ref{sec:paraAlgo} and $i=(m+n)+2$, it wi
 
 \section{Result}
 \label{sec:result}
-All tests below are avaialble at \href{https://github.com/ekvall93/parallelizedShiftExactPermTest}{https://github.com/ekvall93/parallelizedShiftExactPermTest}
+
+\textless Suggestion: Describe the strategy we will use to evaluate the proposed algorithm \textgreater
+ 
 \subsection{Runtime test}
 Here $\bm{x},\bm{y} \sim \mathcal{N}(\mu = 0,\sigma =1)$, and since $\bm{x},\bm{y} \in \mathbb{R}^{m}, \mathbb{R}^{n}$, the range of $s$ as described in section \ref{sec:PvalueComputation} is not well defined (requires integer values). However, a binning procedure solves this obstacle. In this procedure, the number of bins $n_{bins}$ is a hyperparameter which divides the interval $\mathcal{I}_{min(\bm{x},\bm{y}), max(\bm{x},\bm{y})}=[ min(\bm{x},\bm{y}), max(\bm{x},\bm{y}) ]$ into $n_{bins}$ bins with a uniform length of $\frac{|max(\bm{x},\bm{y})| + |min(\bm{x},\bm{y})|}{n_{bins}}$. However, an additional bin has to be added for the boundary condition, i.e., arbitrarily allocates a value on the edge between two bins to the right bin. Therefore, the furthest rightmost point has to be allocated alone in the furthest rightmost bin. Hence, there are $n_{bins}+1$ bins in total. Assign each bin with an increment of $1$ where the leftmost bin has value $0$ and the rightmost bin has value $n_{bins}$ i.e., $\mathcal{I}_{0, (n_{bins})}=[0,1,\ldots,(n_{bins}-1),(n_{bins})]$. Now each bin in $\mathcal{I}_{min(\bm{x},\bm{y}) max(\bm{x},\bm{y})}$ has a corresponding bin in $\mathcal{I}_{min(x,y), max(x,y)}$. Furthermore, it is possible to map these values from their bin to an integer values in $\mathcal{I}_{0, (n_{bins}-1)}$.
 
@@ -291,10 +294,10 @@ In the first test (figure \ref{fig:noarmalS}), $n=m=200$ and $n_{bin}=10,50,100,
 \FloatBarrier
 \begin{figure}[!tbp]
   \centering
-  \subfloat[Run time with $n_{bin}$(bin number) as a variable.]{\includegraphics[width=0.5\textwidth]{normal_S.png}\label{fig:noarmalS}}
+  \subfloat[Run time as a function of $n_{bin}$ (bin number).]{\includegraphics[width=0.5\textwidth]{normal_S.png}\label{fig:noarmalS}}
   \hfill
-  \subfloat[Run time with $n$(sample size) as a variable.]{\includegraphics[width=0.5\textwidth]{normal_N.png}\label{fig:normalN}}
-  \caption{Run time experiments.}
+  \subfloat[Run time as a function of $n$ (sample size).]{\includegraphics[width=0.5\textwidth]{normal_N.png}\label{fig:normalN}}
+  \caption{Run time experiments in the situation where \textless blablabla\textgreater.}
 \end{figure}
 \FloatBarrier
 
@@ -330,6 +333,16 @@ The distributions used are $A \sim \mathcal{N}(0,1)$ and $B \sim \mathcal{N}(\mu
   \end{tabular}
 \caption{The relative error of $p$ values as a function of the the size of the discritization window  for samples from normal distributions with a difference in population means of 1.0 (a) as boxplots, and (b) as XXX plot.}
 \end{figure}
+
+
+\subsection{Implementation}
+A phython 3.6 implementation implementing the above algorithm is made available under a XXX license. The implementation and all results of this paper are available in reproducible form from from GitHub\footnote{\href{https://github.com/ekvall93/parallelizedShiftExactPermTest}{https://github.com/ekvall93/parallelizedShiftExactPermTest}}.
+
+\section{Discussion}
+
+\begin{itemize}
+\item Persuade the reader that the suggested algorithm provides an added value in particular situations!
+\end{itemize}
 
 \bibliographystyle{ieeetr}
 {\bibliography{sample.bib}}
