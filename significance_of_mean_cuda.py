@@ -113,7 +113,7 @@ class significance_of_mean_cuda(object):
         stream.synchronize()
         return A0[:, m - 1, :]
 
-    def _calculate_p_values(self, Z, n_samples, S, A ,bins):
+    def _calculate_p_values(self, Z, n_samples, S, A ,bins, midP=False):
         """Calculate p-value for each sub-array
         Args:
             Z (array): The necessary part of the array to calculate sample p-values.
@@ -128,7 +128,10 @@ class significance_of_mean_cuda(object):
         for i, (a,b) in enumerate(zip(A,bins)):
             pmf = Z[:,i] / np.sum(Z[:,i])
             a_ = np.digitize(a, b).astype(self.dtype_v) - 1
-            P[i] = np.sum(pmf[int(sum(a_)):(int(S[i])+1)])
+            if midP:
+                P[i] = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
+            else:
+                P[i] = np.sum(pmf[int(sum(a_)):(int(S[i])+1)])
         return P
 
     def _exact_perm_numba_shift(self, m, n, S, z):
@@ -162,7 +165,7 @@ class significance_of_mean_cuda(object):
         return self._get_calculated_array(dA0,dA1, A1,A0, stream, m)
         
 
-    def run(self, A, B):
+    def run(self, A, B, midP =False):
         """Run method on the GPU.
         Args:
             A (array): Samples A.
@@ -188,7 +191,7 @@ class significance_of_mean_cuda(object):
         S = np.sum(digitized[:, m:], axis=1)
         
         self.numerator = self._exact_perm_numba_shift(int(m), int(n), S, digitized)
-        self.p_values = self._calculate_p_values(self.numerator, n_samples, S, A, bins)
+        self.p_values = self._calculate_p_values(self.numerator, n_samples, S, A, bins, midP)
         
     def get_numerator(self):
         """Get numerator.
