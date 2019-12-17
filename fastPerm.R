@@ -16,8 +16,10 @@ runFastPerm <- function(nrSamples,meanY, sampleSizeList) {
     Y <- list(mode="vector",length=sampleSize)
     Time <- list(mode="vector",length=sampleSize)
     for (i in 1:nrSamples) {
-      x <- rnorm(sampleSize, mean = 5, sd = 1)
-      y <- rnorm(sampleSize, mean = meanY, sd = 1)
+      #x <- rnorm(sampleSize, mean = 5, sd = 1)
+      #y <- rnorm(sampleSize, mean = meanY, sd = 1)
+      x <- rbeta(sampleSize, mean = 0.5, sd = 0.5)
+      y <- rbetanorm(sampleSize, mean = meanY, sd = 0.5)
       
       X[[i]] <- x
       Y[[i]] <- y
@@ -37,10 +39,10 @@ runFastPerm <- function(nrSamples,meanY, sampleSizeList) {
       
     }
     print(e)
-    write.table(X, sprintf('./dataFastPerm/uniform/data_%s/X_%s.csv',meanY, sampleSize))
-    write.table(Y, sprintf('./dataFastPerm/uniform/data_%s/y_%s.csv',meanY, sampleSize))
-    write.table(format(e, scientific = FALSE), sprintf('./dataFastPerm/uniform/data_%s/error_%s.csv',meanY, sampleSize), quote = FALSE)
-    write.table(format(Time, scientific = FALSE), sprintf('./dataFastPerm/uniform/data_%s/Time_%s.csv',meanY, sampleSize), quote = FALSE)
+    write.table(X, sprintf('./dataFastPerm/uniform/beta_data_%s/X_%s.csv',meanY, sampleSize))
+    write.table(Y, sprintf('./dataFastPerm/uniform/beta_data_%s/y_%s.csv',meanY, sampleSize))
+    write.table(format(e, scientific = FALSE), sprintf('./dataFastPerm/uniform/beta_data_%s/error_%s.csv',meanY, sampleSize), quote = FALSE)
+    write.table(format(Time, scientific = FALSE), sprintf('./dataFastPerm/uniform/beta_data_%s/Time_%s.csv',meanY, sampleSize), quote = FALSE)
   
   }
 
@@ -49,4 +51,4 @@ runFastPerm <- function(nrSamples,meanY, sampleSizeList) {
 
 getwd()
 
-runFastPerm(1000, 5.0, c(5,10,50,100))
+runFastPerm(1000, 5.0, c(5,10,50,100,150,200,250,300))
