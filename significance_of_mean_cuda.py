@@ -27,6 +27,9 @@ class significance_of_mean_cuda(object):
         if self.dtype_v == np.uint16 and self.dtype_A == np.uint32:
             self._get_perm = fill_array_u4_v_u2
 
+        elif self.dtype_v == np.uint16 and self.dtype_A == np.uint64:
+            self._get_perm = fill_array_u8_v_u2
+
         elif self.dtype_v == np.uint16 and self.dtype_A == np.float64:
             self._get_perm = fill_array_f8_v_u2
             
