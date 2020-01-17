@@ -1,6 +1,6 @@
 import numpy as np
 from numba import cuda
-from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2
+from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2, fill_array_f4_v_u2
 import math
 
 class significance_of_mean_cuda(object):
@@ -29,6 +29,9 @@ class significance_of_mean_cuda(object):
 
         elif self.dtype_v == np.uint16 and self.dtype_A == np.uint64:
             self._get_perm = fill_array_u8_v_u2
+
+        elif self.dtype_v == np.uint16 and self.dtype_A == np.float32:
+            self._get_perm = fill_array_f4_v_u2
 
         elif self.dtype_v == np.uint16 and self.dtype_A == np.float64:
             self._get_perm = fill_array_f8_v_u2
