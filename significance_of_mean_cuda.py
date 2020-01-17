@@ -1,6 +1,6 @@
 import numpy as np
 from numba import cuda
-from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4
+from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2
 import math
 
 class significance_of_mean_cuda(object):
