@@ -3,6 +3,23 @@ from numba import cuda
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import mannwhitneyu, ttest_ind
+
+def MW(A, B):
+    p_mw = list()
+    for a,b in zip(A, B):
+        p_mw.append(mannwhitneyu(a,b, alternative="less")[1])
+    return p_mw
+
+def ttests(A,B):
+    p_t = list()
+    for x, y in zip(A, B):
+        t, p = ttest_ind(y, x)
+        p = p/2
+        if t<0:
+            p = 1-p
+        p_t.append(p)
+    return p_t
 
 def table(val, S):
     table = np.zeros(S + 1)
