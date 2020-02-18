@@ -191,12 +191,13 @@ def getNumerator(m, n, S, z, dtype):
 def pValue(Numerator, sample):
     return np.round((Numerator / np.sum(Numerator))[sum(sample):].sum(), 3)
 
-def getdf(P, num_examples):
+def getdf(P, num_examples, test=None):
     P.sort()
     p_arr = np.array(P)
     offset = 1.0/float(num_examples)
     ideal_arr = np.linspace(offset,1.0-offset,num_examples)
-    Pdf = pd.DataFrame({'Observed p-value':p_arr,'Theoretical p-value':ideal_arr})
+    if test:
+        Pdf = pd.DataFrame({'Observed p-value':p_arr,'Theoretical p-value':ideal_arr, "Test":[test]*ideal_arr.shape[0]})
     return Pdf
 
 def my_scatter_plot(df,save_name):
