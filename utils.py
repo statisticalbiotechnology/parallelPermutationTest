@@ -5,6 +5,39 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import mannwhitneyu, ttest_ind
 
+def qvalues(pvalues,p_col = "p", q_col ="q", pi0 = 1.0):
+    """
+    Function for estimaring q values.
+    Args:
+        pvalues (DataFrame): A DataFrame that contain at least one column with pvalues.
+        p_col (str): The name of the column that contain pvalues.
+        q_col (str): The name of the column that that shall contain the estimated
+                    q-values. The column will be created if not already existing.
+        pi0 (float): The prior probability of the null hypothesis. If set to None, this is estimated from data.
+                    Defaults to 1.0
+    Returns:
+        The modified DataFrame.
+    """
+    m = pvalues.shape[0] # The number of p-values
+    pvalues.sort_values(p_col,inplace=True) # sort the pvalues in acending order
+    if pi0 is None:
+        pi0 = estimatePi0(list(pvalues[p_col].values))
+
+    # calculate a FDR(t) as in Storey & Tibshirani
+    num_p = 0.0
+    for ix in pvalues.index:
+        num_p += 1.0
+        fdr = pi0*pvalues.loc[ix,p_col]*m/num_p
+        pvalues.loc[ix,q_col] = fdr
+
+    # calculate a q(p) as the minimal FDR(t)
+    old_q=1.0
+    for ix in reversed(list(pvalues.index)):
+        q = min(old_q,pvalues.loc[ix,q_col])
+        old_q = q
+        pvalues.loc[ix,q_col] = q
+    return pvalues
+
 def MW(A, B):
     p_mw = list()
     for a,b in zip(A, B):
