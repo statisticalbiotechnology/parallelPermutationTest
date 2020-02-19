@@ -4,6 +4,41 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.stats import mannwhitneyu, ttest_ind
+import numpy.random as npr
+
+
+def bootstrap(invec):
+    """ Function for generating bootstrap sampled versions of a vector """
+    idx = npr.randint(0, len(invec), len(invec))
+    return [invec[i] for i in idx]
+
+def estimatePi0(p, numBoot=100, numLambda=100, maxLambda=0.95):
+    """
+    Function for estimaring pi_0, i.e. the prior null probability
+    for p values.
+    Args:
+        p (list(float)): The list of p values for which pi_0 should be estimated
+        numBoot (int): The number of bootstrap rounds that should be made.
+        numLambda (int): The number of lambda tresholds that should be evaluated.
+        maxLambda (float): The upper bond of the range of lambda treshold.
+    Returns:
+        pi_0, a float containing the pi_0 estimate.
+    """
+    p.sort()
+    n=len(p)
+    lambdas=np.linspace(maxLambda/numLambda,maxLambda,numLambda)
+    Wls=np.array([n-np.argmax(p>=l) for l in lambdas])
+    pi0s=np.array([Wls[i] / (n * (1 - lambdas[i])) for i in range(numLambda)])
+    minPi0=np.min(pi0s)
+    mse = np.zeros(numLambda)
+    for boot in range(numBoot):
+        pBoot = bootstrap(p)
+        pBoot.sort()
+        WlsBoot =np.array([n-np.argmax(pBoot>=l) for l in lambdas])
+        pi0sBoot =np.array([WlsBoot[i] / (n *(1 - lambdas[i])) for i in range(numLambda)])
+        mse = mse + np.square(pi0sBoot-minPi0)
+    minIx = np.argmin(mse)
+    return pi0s[minIx]
 
 def qvalues(pvalues,p_col = "p", q_col ="q", pi0 = 1.0):
     """
