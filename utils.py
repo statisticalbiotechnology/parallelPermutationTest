@@ -73,19 +73,23 @@ def qvalues(pvalues,p_col = "p", q_col ="q", pi0 = 1.0):
         pvalues.loc[ix,q_col] = q
     return pvalues
 
-def MW(A, B):
+def MW(A, B, twoSide=True):
     p_mw = list()
     for a,b in zip(A, B):
-        p_mw.append(mannwhitneyu(a,b, alternative="less")[1])
+        if not twoSide:
+            p_mw.append(mannwhitneyu(a,b, alternative="less")[1])
+        else:
+            p_mw.append(mannwhitneyu(a,b, alternative="two-sided")[1])
     return p_mw
 
-def ttests(A,B):
+def ttests(A,B, twoSide=True):
     p_t = list()
     for x, y in zip(A, B):
         t, p = ttest_ind(y, x)
-        p = p/2
-        if t<0:
-            p = 1-p
+        if not twoSide:
+            p = p/2
+            if t<0:
+                p = 1-p
         p_t.append(p)
     return p_t
 
