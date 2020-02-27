@@ -192,7 +192,9 @@ class significance_of_mean_cuda(object):
         if not self.num_bin:
             self.num_bin = np.ceil(np.max(X)) - np.floor(np.min(X)) + 1
 
-        bins = np.linspace(np.min(X, axis=1), np.max(X, axis=1), self.num_bin, axis=1)
+        bins = np.asarray([np.linspace(np.min(x), np.max(x), self.num_bin) for x in X])
+
+
 
         digitized = self._get_digitized_score(X, bins)
 
