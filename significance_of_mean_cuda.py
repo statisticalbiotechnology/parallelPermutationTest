@@ -1,6 +1,6 @@
 import numpy as np
 from numba import cuda
-from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2, fill_array_f4_v_u2
+from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2, fill_array_f4_v_u2, fill_array_f8_v_u8, fill_array_f8_v_f2, fill_array_f8_v_f4, fill_array_f8_v_f8
 import math
 
 class significance_of_mean_cuda(object):
@@ -38,6 +38,14 @@ class significance_of_mean_cuda(object):
             
         elif self.dtype_v == np.uint32 and self.dtype_A == np.float64:
             self._get_perm = fill_array_f8_v_u4
+        elif self.dtype_v == np.uint64 and self.dtype_A == np.float64:
+            self._get_perm = fill_array_f8_v_u8
+        elif self.dtype_v == np.float16 and self.dtype_A == np.float64:
+            self._get_perm = fill_array_f8_v_f2
+        elif self.dtype_v == np.float32 and self.dtype_A == np.float64:
+            self._get_perm = fill_array_f8_v_f4
+        elif self.dtype_v == np.float64 and self.dtype_A == np.float64:
+            self._get_perm = fill_array_f8_v_f8
         else:
             raise ValueError("The selected value tkype combination is currently not available!")
    
