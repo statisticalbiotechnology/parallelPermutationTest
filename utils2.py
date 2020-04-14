@@ -5,6 +5,7 @@ import seaborn as sns
 import pandas as pd
 import time
 from significance_of_mean_cuda import significance_of_mean_cuda
+from scipy.stats import ttest_ind
 
 def score_distribution_numpy_full(digitized,K,S,L, data_type=np.float64):
     # N(s,l) number of ways to reach a sum of s using k of the l first readouts
