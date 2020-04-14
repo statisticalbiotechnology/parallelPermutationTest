@@ -224,7 +224,7 @@ def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingl
 def run_test(X,Y,bins, parallel=True, midP=False):
     if parallel:
         #Exact test
-        SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64)
+        SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64, verbose=False)
         SGM.run(X.reshape(1,-1),Y.reshape(1,-1), midP)
         p_val = [2 * min( p, (1-p)) for p in SGM.get_p_values()][0]
     else:
@@ -232,7 +232,7 @@ def run_test(X,Y,bins, parallel=True, midP=False):
 
     return p_val
 
-def shiftMethod(X_list, y_list, bins, parallel=True, midP=False,verbose=False):
+def shiftMethod(X_list, y_list, bins, parallel=True, midP=False):
     pt_list = list()
     pe_list = list()
     TIME = list()
