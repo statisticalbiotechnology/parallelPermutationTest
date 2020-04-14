@@ -14,7 +14,7 @@ class significance_of_mean_cuda(object):
             Marcello Pagano & David Tritchler: On Obtaining Permutation Distributions in Polynomial Time
             Jens Gebhard and Norbert Schmitz: Permutation tests- a revival?! II. An efficient algorithm for computing the critical region 
     """
-    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False):
+    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False, verbose=True):
         """
         Args:
             num_bin (int): NThe number of bins to divide each sample-set.
@@ -24,6 +24,7 @@ class significance_of_mean_cuda(object):
         self.num_bin = num_bin
         self.dtype_v = dtype_v
         self.dtype_A = dtype_A
+        self.verbose = verbose
         if self.dtype_v == np.uint16 and self.dtype_A == np.uint32:
             self._get_perm = fill_array_u4_v_u2
 
@@ -180,8 +181,8 @@ class significance_of_mean_cuda(object):
 
 
         memoryAllocation = 2*AMem + zMem + SMem
-
-        print("This data requires {} MiB on the GPU.".format(memoryAllocation))
+        if self.verbose:
+            print("This data requires {} MiB on the GPU.".format(memoryAllocation))
 
         z, S, A0, A1 = self._ensure_contiguous(z, S, A0, A1)
         
