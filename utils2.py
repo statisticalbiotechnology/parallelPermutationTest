@@ -86,6 +86,14 @@ def preparePandas(timeData, sampleSizes, test="Parallel"):
             
     return preparePd
 
+def preparePandasFastperm(timeData, sampleSizes, test="Parallel"):
+    preparePd = list()
+    for time, sample in zip(timeData, sampleSizes):
+        for t in time:
+        
+            preparePd.append([str(test),t, sample])
+    return preparePd
+
 def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=False, path=None):
     """Create SNS timeseries-plot"""
     fig, ax = plt.subplots()
