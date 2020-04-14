@@ -2,6 +2,7 @@ import numpy as np
 import concurrent.futures as cf
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 def score_distribution_numpy_full(digitized,K,S,L, data_type=np.float64):
     # N(s,l) number of ways to reach a sum of s using k of the l first readouts
