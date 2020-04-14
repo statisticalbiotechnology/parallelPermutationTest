@@ -114,12 +114,12 @@ def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=Fal
              data=pdData,)
     
     if binVar:
-        plt.xlabel(r"$n$", fontsize=25)
+        plt.xlabel(r"$n$", fontsize=20)
         
     else:
-        plt.xlabel(r"$n_{w}$", fontsize=25)
+        plt.xlabel(r"$n_{w}$", fontsize=20)
     
-    plt.ylabel(r"$time(s)$", fontsize=25)
+    plt.ylabel(r"$time(s)$", fontsize=20)
     
     
     
