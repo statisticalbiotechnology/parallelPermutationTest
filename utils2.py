@@ -114,17 +114,19 @@ def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=Fal
              data=pdData,)
     
     if binVar:
-        plt.xlabel(r"$n$")
+        plt.xlabel(r"$n$", fontsize=25)
         
     else:
-        plt.xlabel(r"$n_{w}$")
+        plt.xlabel(r"$n_{w}$", fontsize=25)
     
     
     
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles=handles[1:], labels=labels[1:])
     
-    plt.setp(snsPlot.get_legend().get_texts(), fontsize='12')
+    plt.setp(snsPlot.get_legend().get_texts(), fontsize=20)
+    plt.xticks(size = 20)
+    plt.yticks(size = 20)
     plt.tight_layout()
     
     if path:   
