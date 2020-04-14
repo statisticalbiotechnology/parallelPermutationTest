@@ -119,6 +119,8 @@ def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=Fal
     else:
         plt.xlabel(r"$n_{w}$", fontsize=25)
     
+    plt.ylabel(r"$time(s)$", fontsize=25)
+    
     
     
     handles, labels = ax.get_legend_handles_labels()
