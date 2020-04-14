@@ -170,16 +170,17 @@ def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingl
     sns.set(style="white")
     sns.set_context("talk")
     
-    preparePdParallel = preparePandas(TIMEParallel, sampleShape)
-    preparePdMc = preparePandas(TIME_MC, sampleShape, 'FastPerm')
+    preparePdParallel = preparePandasFastperm(TIMEParallel, sampleShape, "Parallel Green")
+    preparePdMc = preparePandasFastperm(TIME_MC, sampleShape, 'FastPerm')
     
     if np.any(TIMEsingleThred):
-        preparePdSingle = preparePandas(TIMEsingleThred, sampleShape, 'Single thread Green')
+        preparePdSingle = preparePandasFastperm(TIMEsingleThred, sampleShape, 'Single thread Green')
         data = preparePdMc + preparePdParallel + preparePdSingle
     else:
         data = preparePdMc + preparePdParallel
         
     pdData = pd.DataFrame(data, columns=['Method', 'time(s)','n'])
+
     
     if log:        
         MAX = max(np.max(TIMEParallel), np.max(TIME_MC))
@@ -218,6 +219,7 @@ def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingl
 
 
         fig.savefig(path)
+
 
 def run_test(X,Y,bins, parallel=True, midP=False):
     if parallel:
