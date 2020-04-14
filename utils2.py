@@ -232,7 +232,7 @@ def run_test(X,Y,bins, parallel=True, midP=False):
 
     return p_val
 
-def shiftMethod(X_list, y_list, bins, parallel=True, midP=False):
+def shiftMethod(X_list, y_list, bins, parallel=True, midP=False,verbose=False):
     pt_list = list()
     pe_list = list()
     TIME = list()
