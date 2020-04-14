@@ -136,4 +136,4 @@ def fill_array_f8_v_u8(X1,X2, i_, z_,S):
         X2[s, j - 1, z] = X1[s - int(z_[z, i_ - 1]), j - 2, z] + X1[s, j - 1, z]
     
     elif j>1 and z_[z, i_ - 1] > s:
-        X2[s, j - 1, z] = X1[s, j - 1, z]
+        X2[s, j - 2, z] = X1[s, j - 1, z]

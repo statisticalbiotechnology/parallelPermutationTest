@@ -170,6 +170,19 @@ class significance_of_mean_cuda(object):
             
         A1 = np.zeros([int(np.max(S)) + 1, m, n_samples], self.dtype_A)
 
+        AMem = A1.nbytes / 1048576
+        zMem = z.nbytes / 1048576
+        SMem = S.nbytes / 1048576
+
+        AMem = A1.nbytes / 1000000
+        zMem = z.nbytes / 1000000
+        SMem = S.nbytes / 1000000
+
+
+        memoryAllocation = 2*AMem + zMem + SMem
+
+        print("This data requires {} MiB on the GPU.".format(memoryAllocation))
+
         z, S, A0, A1 = self._ensure_contiguous(z, S, A0, A1)
         
         stream, dz, dS, dA0, dA1 = self._load_gpu(z,S,A0,A1)
@@ -208,7 +221,7 @@ class significance_of_mean_cuda(object):
         digitized = np.pad(digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
         m = m +1
 
-        S = np.sum(digitized[:, m:], axis=1)
+        S = np.sum(digitized[:, m:], axis=1).astype(self.dtype_v)
 
         self.numerator = self._exact_perm_numba_shift(int(m), int(n), S, digitized)
         self.p_values = self._calculate_p_values(self.numerator, n_samples, S, A, bins, midP)
