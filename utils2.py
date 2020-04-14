@@ -3,6 +3,8 @@ import concurrent.futures as cf
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import time
+from significance_of_mean_cuda import significance_of_mean_cuda
 
 def score_distribution_numpy_full(digitized,K,S,L, data_type=np.float64):
     # N(s,l) number of ways to reach a sum of s using k of the l first readouts
@@ -137,4 +139,117 @@ def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=Fal
 
 def getPATH(path, name):
     """Get path for figures"""
-    return path + '/'+ name 
+    return path + '/' + name
+    
+def getSynteticData(func, setN=20, sampleN=2_000, mean=0, std=1,seed=1):
+    """Generate synthetic data"""
+    np.random.seed(seed)
+    AN, BN = [func(mean,std,setN) for i in range(sampleN)], [func(0,std,setN) for i in range(sampleN)]
+    return AN, BN
+
+def getAllSynthticData(sampleRange, mean):
+    """Get all synthetic data"""
+    A_data, B_data = list(), list()
+    for setS in sampleRange:
+        Anorm0, Bnorm0 = getSynteticData(np.random.normal, mean=mean, setN=setS,sampleN=50)
+        A_data.append(Anorm0)
+        B_data.append(Bnorm0)
+    return A_data, B_data
+
+def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingleThred=False, path=None):
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    preparePdParallel = preparePandas(TIMEParallel, sampleShape)
+    preparePdMc = preparePandas(TIME_MC, sampleShape, 'FastPerm')
+    
+    if np.any(TIMEsingleThred):
+        preparePdSingle = preparePandas(TIMEsingleThred, sampleShape, 'Single thread Green')
+        data = preparePdMc + preparePdParallel + preparePdSingle
+    else:
+        data = preparePdMc + preparePdParallel
+        
+    pdData = pd.DataFrame(data, columns=['Method', 'time(s)','n'])
+    
+    if log:        
+        MAX = max(np.max(TIMEParallel), np.max(TIME_MC))
+        MIN = min(np.min(TIMEParallel), np.min(TIME_MC))
+        if np.any(TIMEsingleThred):
+            MAX = max(np.max(TIMEParallel), np.max(TIME_MC), np.max(TIMEsingleThred))
+            MIN = min(np.min(TIMEParallel), np.min(TIME_MC), np.min(TIMEsingleThred))
+            
+        
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        plt.yticks(RANGE, 10.0**RANGE)
+        
+        
+    else:
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        
+        
+    h,l = snsPlot.get_legend_handles_labels()
+    plt.legend(h[1:],l[1:])
+
+    plt.ylabel("time(s)",fontsize=20)
+        
+        
+    plt.xlabel(r"$n$",fontsize=15)
+
+    plt.tight_layout()
+    if path:
+        
+        fig = snsPlot.get_figure()
+
+
+        fig.savefig(path)
+
+def run_test(X,Y,bins, parallel=True, midP=False):
+    if parallel:
+        #Exact test
+        SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64)
+        SGM.run(X.reshape(1,-1),Y.reshape(1,-1), midP)
+        p_val = [2 * min( p, (1-p)) for p in SGM.get_p_values()][0]
+    else:
+        p_val = p_value_calc([list(X), list(Y), bins])
+
+    return p_val
+
+def shiftMethod(X_list, y_list, bins, parallel=True, midP=False):
+    pt_list = list()
+    pe_list = list()
+    TIME = list()
+
+    for Xp, yp in zip(X_list, y_list):
+        p_t = list()
+        p_e = list()
+        time_list = list()
+    
+        for x, y in zip(Xp, yp):
+            
+            
+            t, p = ttest_ind(y, x)
+            
+       
+            p_t.append(p)
+        
+            start = time.time()
+            p_e.append(run_test(y, x, bins, parallel, midP))
+            end = time.time()
+        
+            time_list.append(end - start)
+    
+        pt_list.append(p_t)
+        pe_list.append(p_e)
+        TIME.append(time_list)
+    
+    return pt_list, pe_list, TIME
+    
+
+
