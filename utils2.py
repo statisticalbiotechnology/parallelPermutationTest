@@ -415,6 +415,40 @@ def ttests(A,B, one_side=False):
         p_t.append(p)
     return p_t
 
+def multiple_plot(df, save_name):
+    sns.set(style="white")
+    sns.set_context("talk")
+    low = min(df["Theoretical p-value"])/2
+    hi = max(df["Theoretical p-value"])
+    g=sns.lmplot(x='Theoretical p-value', y ='Observed p-value', data=df, 
+                  fit_reg=False, height=7, truncate=True, scatter_kws={"s": 15}, hue="Test")
+    
+    g.set(xscale="log", yscale="log")
+    g._legend.remove()
+
+
+    plt.xlabel(r'Theoretical $\it{p}$ value', fontsize=24)
+    plt.ylabel(r'Observed $\it{p}$ value', fontsize=24)
+    
+    axes = g.axes
+    g.set(ylim=(low,hi), xlim=(low,hi))
+    plt.plot([low,hi],[low,hi], "k", linewidth=1)
+    plt.plot([2 * low,2 * hi],[low,hi], "--k", linewidth=1)
+    plt.plot([low / 2,hi / 2],[low,hi], "--k", linewidth=1)
+    sns.set_style("ticks")
+    sns.despine()
+    g.fig.tight_layout()
+    
+    
+    plt.legend().set_title('')
+    plt.legend(loc=2,prop={'size': 24})
+    plt.xticks(size = 24)
+    plt.yticks(size = 24)
+
+
+    
+    g.savefig(save_name)
+
     
 
 
