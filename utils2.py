@@ -371,6 +371,50 @@ def SNSMultipleboxPlot(allEerrorList, Bin, allMWUList=None, allFPList=None, log=
     if path:
         fig = snsPlot.get_figure()
         fig.savefig(path)
+
+def getErrors(pValList, pTtestList, rel=True):
+    relatvieErrorList = list()
+    for pv, pt in zip(pValList, pTtestList):
+        if rel:
+            relatvieErrorList.append(relError(pv, pt))
+        else:
+            relatvieErrorList.append(frac(pv, pt))
+            
+    return relatvieErrorList
+
+def relError(x,y):
+    return frac((x - y), y) 
+def frac(x,y):
+    return x / y
+
+def exactTest(A,B, bins=10, one_side=False):
+    SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64)
+    SGM.run(np.asarray(A),np.asarray(B), midP=True)
+    if one_side:
+        return SGM.get_p_values()
+    else:
+        return [2 * min( p, (1-p)) for p in SGM.get_p_values()]
+
+def MWU(A, B, one_side=False):
+    p_mw = list()
+    for a,b in zip(A, B):
+        if one_side:
+            p_mw.append(mannwhitneyu(a,b, alternative="less")[1])
+        else:
+            p_mw.append(mannwhitneyu(a,b, alternative="two-sided")[1])
+    return p_mw
+
+def ttests(A,B, one_side=False):
+    p_t = list()
+    for x, y in zip(A, B):
+        t, p = ttest_ind(y, x)
+        if one_side:
+            p = p/2
+            if t<0:
+                p = 1-p
+        p_t.append(p)
+    return p_t
+
     
 
 
