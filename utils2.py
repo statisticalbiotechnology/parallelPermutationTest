@@ -5,7 +5,7 @@ import seaborn as sns
 import pandas as pd
 import time
 from significance_of_mean_cuda import significance_of_mean_cuda
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, mannwhitneyu
 
 def score_distribution_numpy_full(digitized,K,S,L, data_type=np.float64):
     # N(s,l) number of ways to reach a sum of s using k of the l first readouts
@@ -388,7 +388,7 @@ def frac(x,y):
     return x / y
 
 def exactTest(A,B, bins=10, one_side=False):
-    SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64)
+    SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64, verbose=False)
     SGM.run(np.asarray(A),np.asarray(B), midP=True)
     if one_side:
         return SGM.get_p_values()
