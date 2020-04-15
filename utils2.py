@@ -261,6 +261,116 @@ def shiftMethod(X_list, y_list, bins, parallel=True, midP=False):
         TIME.append(time_list)
     
     return pt_list, pe_list, TIME
+
+def prepareBoxPandas(timeData, sampleSizes,label=None):
+    preparePd = list()
+    for time, sample in zip(timeData, sampleSizes):
+        for t in time:
+            if label:
+                preparePd.append([t, sample, label])
+            else:
+                preparePd.append([t, sample])
+    return preparePd
+
+def SNSMultipleboxPlot(allEerrorList, Bin, allMWUList=None, allFPList=None, log=True, 
+                       path=None, test_type="setSize", relError=True, dashed=False,
+                       ylim=False):
+    
+    plt.figure(figsize=(16, 10))
+    
+    dataParallel = prepareBoxPandas(allEerrorList, Bin, "Parallel Green")
+    
+    data= dataParallel
+    
+    if allFPList:
+        dataFastApprox = prepareBoxPandas(allFPList, Bin, "FastPerm")
+        data += dataFastApprox
+    if allMWUList:
+        MannWhitneyApprox = prepareBoxPandas(allMWUList, Bin, "Mann–Whitney $\it{U}$ test")
+        data += MannWhitneyApprox
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    pdData = pd.DataFrame(data, columns=['error','bins', 'Method'])
+    
+    if test_type=="setSize":
+        snsPlot = sns.boxplot(x="bins", y="error", data=pdData, hue="Method")
+    else:
+        snsPlot = sns.boxplot(x="bins", y="error", data=pdData, color="skyblue")
+        
+    
+    if relError:
+        plt.ylabel(r"Relative error $\big(|\frac{p_{*}-p_{t}}{p_{t}}|)$",fontsize=25)
+    else:
+        plt.ylabel(r"$\frac{p_{*}}{p_{t}}$",fontsize=45)
+        
+    if test_type=="windowSize":
+        plt.xlabel(r"$n_{w}$",fontsize=45)
+    else:
+        plt.xlabel(r"$n$",fontsize=45)
+    
+    sns.set_style("ticks")
+    sns.despine()
+    plt.tight_layout()
+    plt.gcf().subplots_adjust(left=0.30)
+    
+     
+    
+    if log:
+        if allFPList and allMWUList:
+            MAX = max(np.max(allEerrorList), np.max(allFPList), np.max(allMWUList))
+            MIN = min(np.min(allEerrorList), np.min(allFPList), np.min(allMWUList))
+        elif allFPList:
+            MAX = max(np.max(allEerrorList), np.max(allFPList))
+            MIN = min(np.min(allEerrorList), np.min(allFPList))
+        elif allMWUList:
+            MAX = max(np.max(allEerrorList), np.max(allMWUList))
+            MIN = min(np.min(allEerrorList), np.min(allMWUList))
+        else:
+            MAX = np.max(allEerrorList)
+            MIN = np.min(allEerrorList)
+         
+
+        if dashed:
+            plt.axhline(0, ls=':', color="black", linewidth=3)
+        
+            
+        #RANGE = np.arange(np.floor(MIN), np.ceil(MAX), 100)
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        
+        if not relError:
+            if ylim and ylim[1]<10:
+                RANGE = np.array(sorted(list(RANGE) + [np.log10(0.5), np.log10(2)]))
+            else:
+                RANGE = np.array(sorted(list(RANGE)))
+
+        plt.yticks(RANGE, 10.0**RANGE)
+
+        
+        
+    if test_type=="setSize":
+        plt.legend().set_title('')
+    
+    #€plt.yticks([0.5, 1, 2])
+    
+    
+    if ylim:
+        plt.ylim(np.log10(ylim[0]) ,np.log10(ylim[1]))
+        path += "_zoom"
+        
+        plt.xticks(size = 32)
+        plt.yticks(size = 32)
+    else:
+        plt.xticks(size = 32)
+        plt.yticks(size = 25)
+        
+    
+
+    
+    if path:
+        fig = snsPlot.get_figure()
+        fig.savefig(path)
     
 
 
