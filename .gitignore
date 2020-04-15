@@ -1,4 +1,6 @@
-old.ipynb
-experiment.ipynb
 __pycache__
 data
+.ipynb_checkpoints/
+.Rapp.history
+.Rhistory
+vscode/
