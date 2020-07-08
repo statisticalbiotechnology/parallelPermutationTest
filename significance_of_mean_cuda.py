@@ -227,7 +227,7 @@ class significance_of_mean_cuda(object):
         if self.gpu:
             self.numerator = self._exact_perm_gpu_shift(int(self.m), int(self.n), self.S, self.digitized)
         else:
-            self.numerator = self._exact_perm_cpu_shift(int(self.m), int(self.n), self.S, self.digitized)
+            self.numerator = self._exact_perm_cpu_shift(int(self.m), int(self.n), self.S[0], list(self.digitized[0]))
         self.p_values = self._calculate_p_values(self.numerator, self.n_samples, self.S, A, bins, midP)
 
     def _exact_perm_cpu_shift(self, m, n, S, z, dtype=np.float64):
