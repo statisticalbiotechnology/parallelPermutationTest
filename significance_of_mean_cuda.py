@@ -216,16 +216,16 @@ class significance_of_mean_cuda(object):
 
 
 
-        digitized = self._get_digitized_score(X, bins)
+        self.digitized = self._get_digitized_score(X, bins)
 
         #Add the empty set.
-        digitized = np.pad(digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
-        m = m +1
+        self.digitized = np.pad(self.digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
+        m = m + 1
 
-        S = np.sum(digitized[:, m:], axis=1).astype(self.dtype_v)
+        self.S = np.sum(self.digitized[:, m:], axis=1).astype(self.dtype_v)
 
-        self.numerator = self._exact_perm_numba_shift(int(m), int(n), S, digitized)
-        self.p_values = self._calculate_p_values(self.numerator, n_samples, S, A, bins, midP)
+        self.numerator = self._exact_perm_numba_shift(int(m), int(n), self.S, self.digitized)
+        self.p_values = self._calculate_p_values(self.numerator, n_samples, self.S, A, bins, midP)
         
     def get_numerator(self):
         """Get numerator.
