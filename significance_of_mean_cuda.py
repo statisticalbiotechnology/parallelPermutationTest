@@ -14,13 +14,14 @@ class significance_of_mean_cuda(object):
             Marcello Pagano & David Tritchler: On Obtaining Permutation Distributions in Polynomial Time
             Jens Gebhard and Norbert Schmitz: Permutation tests- a revival?! II. An efficient algorithm for computing the critical region 
     """
-    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False, verbose=True):
+    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False, verbose=True, gpu=True):
         """
         Args:
             num_bin (int): NThe number of bins to divide each sample-set.
             dtype_v (type): The datatype of small arrays and values.
             dtype_A (type): The datatype type of large arrays.
         """
+        self.gpu = gpu
         self.num_bin = num_bin
         self.dtype_v = dtype_v
         self.dtype_A = dtype_A
@@ -148,7 +149,7 @@ class significance_of_mean_cuda(object):
                 P[i] = np.sum(pmf[int(sum(a_)):(int(S[i])+1)])
         return P
 
-    def _exact_perm_numba_shift(self, m, n, S, z):
+    def _exact_perm_gpu_shift(self, m, n, S, z):
         """Run the shift-method on the GPU.
         Args:
             m (int): Sample size of sample A
@@ -223,9 +224,35 @@ class significance_of_mean_cuda(object):
         self.m = self.m + 1
 
         self.S = np.sum(self.digitized[:, self.m:], axis=1).astype(self.dtype_v)
-
-        self.numerator = self._exact_perm_numba_shift(int(self.m), int(self.n), self.S, self.digitized)
+        if self.gpu:
+            self.numerator = self._exact_perm_gpu_shift(int(self.m), int(self.n), self.S, self.digitized)
+        else:
+            self.numerator = self._exact_perm_cpu_shift(int(self.m), int(self.n), self.S, self.digitized)
         self.p_values = self._calculate_p_values(self.numerator, self.n_samples, self.S, A, bins, midP)
+
+    def _exact_perm_cpu_shift(self, m, n, S, z, dtype=np.float64):
+        N = np.zeros([S + 1, m], dtype)
+        N_old = N.copy()
+    
+        for i in range(1,(m+n)+1):
+            for j in range(0, m +1):
+                for s in range(0,S+1):
+                
+                    if j >= m + 1 or s > S or j < 1:
+                        pass
+                    elif s == 0 and int(j-1)==0:
+                        N[s,j-1] =  1
+                    elif i < j:
+                        N[s, j - 1] = 0
+                    elif j > 1 and z[i-1] <= s:
+                        N[s,j-1] = N_old[s - z[i -1], j-2] + N_old[s,j-1]
+                    elif j > 1 and z[i-1] > s:
+                        N[s,j-1] = N_old[s,j-1]
+    
+            N_old = N.copy()
+
+        return N_old[:,-1]
+
         
     def get_numerator(self):
         """Get numerator.
