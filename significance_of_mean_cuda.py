@@ -201,10 +201,10 @@ class significance_of_mean_cuda(object):
              p-values
         """
         
-        m = A.shape[1]
-        n = B.shape[1]
+        self.m = A.shape[1]
+        self.n = B.shape[1]
 
-        n_samples = A.shape[0]
+        self.n_samples = A.shape[0]
 
         X = np.concatenate([A,B],axis=1)
         X.sort()
@@ -220,12 +220,12 @@ class significance_of_mean_cuda(object):
 
         #Add the empty set.
         self.digitized = np.pad(self.digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
-        m = m + 1
+        self.m = self.m + 1
 
-        self.S = np.sum(self.digitized[:, m:], axis=1).astype(self.dtype_v)
+        self.S = np.sum(self.digitized[:, self.m:], axis=1).astype(self.dtype_v)
 
-        self.numerator = self._exact_perm_numba_shift(int(m), int(n), self.S, self.digitized)
-        self.p_values = self._calculate_p_values(self.numerator, n_samples, self.S, A, bins, midP)
+        self.numerator = self._exact_perm_numba_shift(int(self.m), int(self.n), self.S, self.digitized)
+        self.p_values = self._calculate_p_values(self.numerator, self.n_samples, self.S, A, bins, midP)
         
     def get_numerator(self):
         """Get numerator.
