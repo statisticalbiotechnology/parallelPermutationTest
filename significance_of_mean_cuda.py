@@ -2,6 +2,7 @@ import numpy as np
 from numba import cuda
 from cuda_fill_array import fill_array_u4_v_u2, fill_array_f8_v_u2, fill_array_f8_v_u4, fill_array_u8_v_u2, fill_array_f4_v_u2, fill_array_f8_v_u8
 import math
+from utils2 import getNumeratorCPU
 
 class significance_of_mean_cuda(object):
     """Fast p-value calculation.
@@ -14,7 +15,7 @@ class significance_of_mean_cuda(object):
             Marcello Pagano & David Tritchler: On Obtaining Permutation Distributions in Polynomial Time
             Jens Gebhard and Norbert Schmitz: Permutation tests- a revival?! II. An efficient algorithm for computing the critical region 
     """
-    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False, verbose=True, gpu=True):
+    def __init__(self,num_bin = None, dtype_v=np.uint64, dtype_A=np.float64, new_version=False, verbose=True, gpu=True, n_cores=-1):
         """
         Args:
             num_bin (int): NThe number of bins to divide each sample-set.
@@ -22,6 +23,7 @@ class significance_of_mean_cuda(object):
             dtype_A (type): The datatype type of large arrays.
         """
         self.gpu = gpu
+        self.n_cores = n_cores
         self.num_bin = num_bin
         self.dtype_v = dtype_v
         self.dtype_A = dtype_A
@@ -227,7 +229,8 @@ class significance_of_mean_cuda(object):
         if self.gpu:
             self.numerator = self._exact_perm_gpu_shift(int(self.m), int(self.n), self.S, self.digitized)
         else:
-            self.numerator = self._exact_perm_cpu_shift(int(self.m), int(self.n), self.S[0], list(self.digitized[0]))
+            #self._exact_perm_cpu_shift(int(self.m), int(self.n), self.S[0], list(self.digitized[0]))
+            self.numerator = getNumeratorCPU(int(self.m), int(self.n), self.S[0], list(self.digitized[0]), self.n_cores) 
             self.numerator = self.numerator.reshape(-1,1)
         self.p_values = self._calculate_p_values(self.numerator, self.n_samples, self.S, A, bins, midP)
 
