@@ -42,8 +42,7 @@ def getNumeratorCPU(m, n, S, z, dtype, cores=-1):
                 elif j > 1 and z[i-1] > s:
                     tmp[s,j-1] = N_old[s,j-1]
     
-    starttime = time.time()
-        
+    
     x_len, y_len = S + 1, m + 1
 
     batchsize =  int(x_len / cores)
