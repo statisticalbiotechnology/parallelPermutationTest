@@ -10,62 +10,6 @@ import itertools
 from multiprocessing import sharedctypes
 import multiprocessing 
 
-def getNumeratorCPU(m, n, S, z, dtype, cores=-1):
-    if cores == -1:
-        cores = multiprocessing.cpu_count()
-        
-    
-    N = np.zeros([S + 1, m], dtype)
-    N_old = N.copy()
-    
-    
-    N = np.ctypeslib.as_ctypes(np.zeros((S + 1, m)))
-    N_shared_array = sharedctypes.RawArray(N._type_, N)
-    
-    def multiprocessing_func(xLim, yLim, N_shared_array):
-        tmp = np.ctypeslib.as_array(N_shared_array)
-    
-        underLimX, upperLimX = xLim
-        underLimY, upperLimY = yLim
-
-    
-        for j in range(underLimY, upperLimY):
-            for s in range(underLimX, upperLimX):
-                if j >= m + 1 or s > S or j < 1:
-                    pass
-                elif s == 0 and int(j-1)==0:
-                    tmp[s,j-1] =  1
-                elif i < j:
-                    tmp[s, j - 1] = 0
-                elif j > 1 and z[i-1] <= s:
-                    tmp[s,j-1] = N_old[s - z[i -1], j-2] + N_old[s,j-1]
-                elif j > 1 and z[i-1] > s:
-                    tmp[s,j-1] = N_old[s,j-1]
-    
-    
-    x_len, y_len = S + 1, m + 1
-
-    batchsize =  int(x_len / cores)
-        
-    for i in range(1,(m+n)+1): 
-        processes = []
-        for underLim in range(0, x_len, batchsize):
-            if underLim + batchsize > x_len:
-                upperLim = x_len
-            else:
-                upperLim = underLim + batchsize
-                
-            p = multiprocessing.Process(target=multiprocessing_func, args=((underLim, upperLim),(0,y_len), N_shared_array))
-            processes.append(p)
-            p.start()
-        
-        for process in processes:
-            process.join()
-        
-        N_old = np.ctypeslib.as_array(N_shared_array).copy()
-        
-
-    return N_old[:,-1]
 
 class significance_of_mean_cuda(object):
     """Fast p-value calculation.

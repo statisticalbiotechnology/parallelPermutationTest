@@ -46,8 +46,7 @@ def getNumeratorCPU(m, n, S, z, dtype, cores=-1):
                 elif j > 1 and z[i-1] > s:
                     tmp[s,j-1] = N_old[s,j-1]
     
-    starttime = time.time()
-        
+    
     x_len, y_len = S + 1, m + 1
 
     batchsize =  int(x_len / cores)
@@ -253,6 +252,61 @@ def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingl
         if np.any(TIMEsingleThred):
             MAX = max(np.max(TIMEParallel), np.max(TIME_MC), np.max(TIMEsingleThred))
             MIN = min(np.min(TIMEParallel), np.min(TIME_MC), np.min(TIMEsingleThred))
+            
+        
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        plt.yticks(RANGE, 10.0**RANGE)
+        
+        
+    else:
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        
+        
+    h,l = snsPlot.get_legend_handles_labels()
+    plt.legend(h[1:],l[1:])
+
+    plt.ylabel("time(s)",fontsize=20)
+        
+        
+    plt.xlabel(r"$n$",fontsize=15)
+
+    plt.tight_layout()
+    if path:
+        
+        fig = snsPlot.get_figure()
+
+
+        fig.savefig(path)
+
+def GPUTimeComparisonPlot(RTX2060, RTX2070, sampleShape, log=False, TITANX=False, path=None):
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    preparePdParallel = preparePandasFastperm(RTX2060, sampleShape, "RTX2060")
+    preparePdMc = preparePandasFastperm(RTX2070, sampleShape, 'RTX2070')
+    
+    if np.any(TITANX):
+        preparePdSingle = preparePandasFastperm(TITANX, sampleShape, 'TITANX')
+        data = preparePdMc + preparePdParallel + preparePdSingle
+    else:
+        data = preparePdMc + preparePdParallel
+        
+    pdData = pd.DataFrame(data, columns=['Method', 'time(s)','n'])
+
+    
+    if log:        
+        MAX = max(np.max(RTX2060), np.max(RTX2070))
+        MIN = min(np.min(RTX2060), np.min(RTX2070))
+        if np.any(TITANX):
+            MAX = max(np.max(RTX2060), np.max(RTX2070), np.max(TITANX))
+            MIN = min(np.min(RTX2060), np.min(RTX2070), np.min(TITANX))
             
         
         RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
