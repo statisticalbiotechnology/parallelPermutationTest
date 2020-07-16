@@ -190,9 +190,10 @@ class significance_of_mean_cuda(object):
         SMem = S.nbytes / 1000000
 
 
-        memoryAllocation = 2*AMem + zMem + SMem
+        self.mem_alloc = 2 * AMem + zMem + SMem
+        
         if self.verbose:
-            print("This data requires {} MiB on the GPU.".format(memoryAllocation))
+            print("This data requires {} MiB on the GPU.".format(self.mem_alloc))
 
         z, S, A0, A1 = self._ensure_contiguous(z, S, A0, A1)
         
