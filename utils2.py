@@ -220,11 +220,11 @@ def getSynteticData(func, setN=20, sampleN=2_000, mean=0, std=1,seed=1):
     AN, BN = [func(mean,std,setN) for i in range(sampleN)], [func(0,std,setN) for i in range(sampleN)]
     return AN, BN
 
-def getAllSynthticData(sampleRange, mean):
+def getAllSynthticData(sampleRange, mean,sampleN=50):
     """Get all synthetic data"""
     A_data, B_data = list(), list()
     for setS in sampleRange:
-        Anorm0, Bnorm0 = getSynteticData(np.random.normal, mean=mean, setN=setS,sampleN=50)
+        Anorm0, Bnorm0 = getSynteticData(np.random.normal, mean=mean, setN=setS,sampleN=sampleN)
         A_data.append(Anorm0)
         B_data.append(Bnorm0)
     return A_data, B_data
@@ -695,6 +695,59 @@ def qvalues(pvalues,p_col = "p", q_col ="q", pi0 = 1.0):
         old_q = q
         pvalues.loc[ix,q_col] = q
     return pvalues
+
+def timePlotSNSFastpermCoinFastPerm(TIMEParallel, TIME_MC, TIMEsingleThread, TimeCoin, sampleShape, log=False, path=None):
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    preparePdParallel = preparePandasFastperm(TIMEParallel, sampleShape, "Parallel Green")
+    preparePdMc = preparePandasFastperm(TIME_MC, sampleShape, 'FastPerm')
+    preparePdSingle = preparePandasFastperm(TIMEsingleThread, sampleShape, 'Single thread Green')
+    preparePdCoin = preparePandasFastperm(TimeCoin, sampleShape, 'Coin')
+    
+    data = preparePdMc + preparePdParallel + preparePdSingle + preparePdCoin
+    
+    
+        
+    pdData = pd.DataFrame(data, columns=['Method', 'time(s)','n'])
+
+    
+    if log:        
+        MAX = max(np.max(TIMEParallel), np.max(TIME_MC), np.max(TIMEsingleThread), np.max(TimeCoin))
+        MIN = min(np.min(TIMEParallel), np.min(TIME_MC), np.min(TIMEsingleThread), np.min(TimeCoin))
+            
+            
+        
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        plt.yticks(RANGE, 10.0**RANGE)
+        
+        
+    else:
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        
+        
+    h,l = snsPlot.get_legend_handles_labels()
+    plt.legend(h[1:],l[1:])
+
+    plt.ylabel("time(s)",fontsize=20)
+        
+        
+    plt.xlabel(r"$n$",fontsize=15)
+
+    plt.tight_layout()
+    if path:
+        
+        fig = snsPlot.get_figure()
+
+
+        fig.savefig(path)
 
 
     
