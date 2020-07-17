@@ -150,12 +150,14 @@ def preparePandas(timeData, sampleSizes, test="Parallel"):
             
     return preparePd
 
-def preparePandasFastperm(timeData, sampleSizes, test="Parallel"):
+def preparePandasFastperm(timeData, sampleSizes, test="Parallel", replicates=True):
     preparePd = list()
     for time, sample in zip(timeData, sampleSizes):
-        for t in time:
-        
-            preparePd.append([str(test),t, sample])
+        if isinstance(time,float):
+            preparePd.append([str(test),time, sample])
+        else:
+            for t in time:
+                preparePd.append([str(test),t, sample])
     return preparePd
 
 def timePlotSNS(TIMEParallel, TIMEsingleThred, sampleShape,binVar=False, log=False, path=None):
@@ -748,6 +750,70 @@ def timePlotSNSFastpermCoinFastPerm(TIMEParallel, TIME_MC, TIMEsingleThread, Tim
 
 
         fig.savefig(path)
+
+def plotSNS(tup1, tup2, tup3 , sampleShape, y_lab, x_lab, log=False, path=None):
+    
+    dataList1, name1 = tup1 
+    dataList2, name2 = tup2 
+    dataList3, name3 = tup3
+
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    df1 = preparePandasFastperm(dataList1, sampleShape, name1)
+    df2 = preparePandasFastperm(dataList2, sampleShape, name2)
+    df3 = preparePandasFastperm(dataList3, sampleShape, name3)
+
+    
+    data = df1 + df2 + df3
+    
+    
+        
+    pdData = pd.DataFrame(data, columns=['Method', 'time(s)','n'])
+
+    
+    if log:        
+        MAX = max(np.max(dataList1), np.max(dataList2), np.max(dataList3))
+        MIN = min(np.min(dataList1), np.min(dataList2), np.min(dataList3))
+            
+            
+        
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        plt.yticks(RANGE, 10.0**RANGE)
+        
+        
+    else:
+        snsPlot = sns.lineplot(x="n", y="time(s)",
+             hue="Method",
+             data=pdData)
+        
+        
+    h,l = snsPlot.get_legend_handles_labels()
+    plt.legend(h[1:],l[1:])
+
+    plt.ylabel(y_lab,fontsize=20)
+        
+        
+    plt.xlabel(x_lab,fontsize=15)
+
+    plt.tight_layout()
+    if path:
+        
+        fig = snsPlot.get_figure()
+
+
+        fig.savefig(path)
+
+
+    
+
+
+
 
 
     
