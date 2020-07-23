@@ -231,6 +231,22 @@ def getAllSynthticData(sampleRange, mean,sampleN=50):
         B_data.append(Bnorm0)
     return A_data, B_data
 
+
+def getSynteticData(func, setN=20, sampleN=2_000, mean=0, std=1,seed=1):
+    """Generate synthetic data"""
+    np.random.seed(seed)
+    AN, BN = [func(mean,std,setN) for i in range(sampleN)], [func(0,std,setN) for i in range(sampleN)]
+    return AN, BN
+
+def getAllSynthticData(sampleRange, mean,sampleN=50):
+    """Get all synthetic data"""
+    A_data, B_data = list(), list()
+    for setS in sampleRange:
+        Anorm0, Bnorm0 = getSynteticData(np.random.normal, mean=mean, setN=setS,sampleN=sampleN)
+        A_data.append(Anorm0)
+        B_data.append(Bnorm0)
+    return A_data, B_data
+
 def timePlotSNSFastperm(TIMEParallel, TIME_MC, sampleShape, log=False, TIMEsingleThred=False, path=None):
     
     sns.set(style="white")
