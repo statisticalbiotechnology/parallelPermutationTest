@@ -99,7 +99,7 @@ def significance_of_mean(a,b,num_bin = None, data_type=np.float64): #
     
     
 
-    bins = np.linspace(min(ab), max(ab), num_bin)    
+    bins = np.linspace(min(ab), max(ab), int(num_bin))    
     #bins = np.linspace(np.floor(min(ab)), np.ceil(max(ab)), num_bin)
     digitized = np.digitize(ab, bins)
     
