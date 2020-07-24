@@ -149,8 +149,10 @@ class significance_of_mean_cuda(object):
             p-values
         """
         P = np.zeros(n_samples)
+        self.dperm = list()
         for i, (a,b) in enumerate(zip(A,bins)):
-            pmf = Z[:,i] / np.sum(Z[:,i])
+            pmf = Z[:, i] / np.sum(Z[:, i])
+            self.dperm.append(pmf)
             a_ = np.digitize(a, b).astype(self.dtype_v) - 1
             if midP:
                 P[i] = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
