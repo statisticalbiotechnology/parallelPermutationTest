@@ -363,6 +363,7 @@ def run_test(X,Y,bins, parallel=True, midP=False):
         #Exact test
         SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64, verbose=False)
         SGM.run(X.reshape(1,-1),Y.reshape(1,-1), midP)
+        p_val = [2 * min( p, (1-p)) for p in SGM.get_p_values()][0]
     else:
         p_val = p_value_calc([list(X), list(Y), bins])
 
