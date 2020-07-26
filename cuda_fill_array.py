@@ -7,7 +7,7 @@ def fill_array_u4_v_u2(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
@@ -30,7 +30,7 @@ def fill_array_f4_v_u2(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
@@ -53,7 +53,7 @@ def fill_array_u8_v_u2(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
@@ -77,7 +77,7 @@ def fill_array_f8_v_u2(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
@@ -100,7 +100,7 @@ def fill_array_f8_v_u4(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
@@ -123,7 +123,7 @@ def fill_array_f8_v_u8(X1,X2, i_, z_,S):
 
     s, j, z = cuda.grid(3)
     
-    if j >= m + 1 or s > S[z] or z >= L  or j < 1:
+    if j >= min(m + 1,i_) or s > S[z] or z >= L  or j < 1:
         return
 
     if s==0 and int(j-1)==0:
