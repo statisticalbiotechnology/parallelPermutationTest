@@ -155,10 +155,10 @@ class significance_of_mean_cuda(object):
             self.dperm.append(pmf)
             a_ = np.digitize(a, b).astype(self.dtype_v) - 1
             if midP:
-                P[i] = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
+                p = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
             else:
                 p = np.sum(pmf[int(sum(a_)) : (int(S[i]) + 1)])
-                P[i] = 2 * min( p, (1-p))
+            P[i] = 2 * min( p, (1-p))
                 
         return P
 
