@@ -232,8 +232,8 @@ class significance_of_mean_cuda(object):
         self.digitized = self._get_digitized_score(X, bins)
 
         #Add the empty set.
-        #self.digitized = np.pad(self.digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
-        #elf.m = self.m + 1
+        self.digitized = np.pad(self.digitized, ((0,0),(1,0)),'constant', constant_values=(0, 0))
+        self.m = self.m + 1
 
         self.S = np.sum(self.digitized[:, self.m:], axis=1).astype(self.dtype_v)
         if self.gpu:
