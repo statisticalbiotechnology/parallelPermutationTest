@@ -157,7 +157,9 @@ class significance_of_mean_cuda(object):
             if midP:
                 P[i] = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
             else:
-                P[i] = np.sum(pmf[int(sum(a_)):(int(S[i])+1)])
+                p = np.sum(pmf[int(sum(a_)) : (int(S[i]) + 1)])
+                P[i] = 2 * min( p, (1-p))
+                
         return P
 
     def _exact_perm_gpu_shift(self, m, n, S, z):
