@@ -350,15 +350,15 @@ static PyMethodDef mainMethods[] = {
 };
 
 
-static PyModuleDef permutationTest = {
+static PyModuleDef permutationTestC = {
  PyModuleDef_HEAD_INIT,
- "permutationTest","Permutation Distribution",
+ "permutationTestC","Permutation Distribution",
  -1,
  mainMethods
 };
 
-PyMODINIT_FUNC PyInit_permutationTest(void){
- return PyModule_Create(&permutationTest);
+PyMODINIT_FUNC PyInit_permutationTestC(void){
+ return PyModule_Create(&permutationTestC);
 }
 
 

@@ -11,7 +11,7 @@ from distutils.core import setup, Extension
 extra_compile_args = ["-fopenmp",'-fpic',"-O3", "-fno-wrapv"]
 extra_link_args=['-fopenmp',"-shared"]
 
-factorial_module = Extension('permutationTest',sources = ['permutationTest.cpp'],
+factorial_module = Extension('permutationTestC',sources = ['permutationTest.cpp'],
  extra_compile_args=extra_compile_args,
  extra_link_args=extra_link_args)
 
