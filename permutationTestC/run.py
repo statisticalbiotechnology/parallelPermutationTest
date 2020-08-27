@@ -1,8 +1,12 @@
 #from cmath import factorial
-from permutationTest import GrennPdistOpenMP, GrennPdist, coinShiftPdist
+""" from permutationTestC import GrennPdistOpenMP, GrennPdist, coinShiftPdist """
+from permutationTest import coinShiftInt, GreenInt, GreenFloat, GreenFloatCuda, coinShiftFloat
 import numpy as np
 import time
-def getDataCoinShift(A,B):
+
+
+
+""" def getDataCoinShift(A,B):
     scores = np.concatenate((A,B))
     n = scores.shape[0]
     m = A.shape[0]
@@ -30,9 +34,9 @@ def getDataGreen(A,B):
       z.sort()
       S = z[m:].sum()
       
-      return z, m, n, S
+      return z, m, n, S """
 
-A = np.array([169,  16, 494,  73,  23, 300, 467,  76, 361, 264, 163, 434,  96,
+""" A = np.array([169,  16, 494,  73,  23, 300, 467,  76, 361, 264, 163, 434,  96,
         76, 214,  48, 320, 288, 219, 405, 125, 117, 294, 168, 196, 103,
        261, 427, 364,  52, 360,  39, 491,  34,  59, 381, 256, 324, 326,
         89, 197, 303, 455, 352, 212, 122,  32, 451,  81,  53, 239, 461,
@@ -110,31 +114,60 @@ B = np.array([176, 185, 163, 279, 364, 257, 407, 155, 385, 325, 436, 180, 152,
         27, 309, 476, 460,  35, 249, 484,  14, 413, 211, 276, 178, 120,
         84, 128, 203, 470, 328,  77, 283, 175, 128, 205, 280, 410, 117,
        199,  36,   5, 476, 137,   4, 314, 391, 432, 470, 496, 258, 126,
-       334, 169, 355, 158, 249, 459],dtype=np.int32)
+       334, 169, 355, 158, 249, 459],dtype=np.int32) """
 
+np.random.seed(15)
+n = 100
+m = n
+n_samples = 500
+A = np.asarray([np.random.randint(0,n,m,dtype=np.int32) for _ in range(n_samples)])
+B = np.asarray([np.random.randint(0,n,n,dtype=np.int32) for _ in range(n_samples)])
 
-
-
-''' 
-start = time.time()
-d0 = np.array(coinShiftPdist(*getDataCoinShift(A,B)))
-end = time.time()
-print(end - start)
-
- '''
-
-start = time.time()
-d1 = GrennPdist(*getDataGreen(A,B))
-end = time.time()
-print(end - start)
+A,B = A[0], B[0]
 
 
 start = time.time()
-d2 = np.array(GrennPdistOpenMP(*getDataGreen(A,B)))
+d4 = coinShiftInt(A,B)
 end = time.time()
-print(end - start)
+""" print(end - start) """
 
-''' print(np.allclose(d0,d2)) '''
+print(d4)
 
-#print(factorial(np.array([1.0, 2.0, 3.0])))
-#print(factorial(a,b,im_a, im_b ))
+start = time.time()
+d5 = GreenInt(A,B)
+end = time.time()
+""" print(end - start) """
+
+print(d5)
+
+
+start = time.time()
+d5 = GreenInt(A,B, multiThread=True)
+end = time.time()
+""" print(end - start) """
+
+print(d5)
+
+start = time.time()
+d5 = GreenFloat(A,B, n, multiThread=True)
+end = time.time()
+""" print(end - start) """
+
+print(d5)
+
+
+start = time.time()
+d5 = GreenFloatCuda(A,B, n)
+end = time.time()
+""" print(end - start) """
+
+print(d5)
+
+
+
+start = time.time()
+d5 = coinShiftFloat(A,B, n)
+end = time.time()
+""" print(end - start) """
+
+print(d5)
