@@ -21,6 +21,70 @@ def batch(Arr, n=1):
         yield Arr[ndx:min(ndx + n, l),:]
 
 
+def GreenFloatCuda_memcheck(A,B, num_bin):
+    def digitized_score(X, bins):
+        """Digitize the values for each sample.
+        Args:
+            X (array): Concatenated sample from original samples A and B.
+            bins(int): The number of bins to divide the sample values.
+        Returns:
+            digitized array
+        """
+        digitized = np.zeros(X.shape,dtype=np.int32)
+        for i, (x,b) in enumerate(zip(X,bins)):
+            digitized[i,:] = np.digitize(x, b).astype(np.int32) - 1
+        return digitized
+        
+    def GreenFloatDataPreProcess(A, B, num_bin):
+        """Preprocess data for Green's algorithm.
+        Args:
+            A (array): Samples A.
+            B (array): Samples B.
+            num_bin (int): Number of bins for digitization.
+        Returns:
+             digitized data, size of A, size of B, maximum sum, number of samples,
+             bins for data, and array of Sums.  
+        """
+        
+        m = A.shape[1]
+        n = B.shape[1]
+        n_samples = A.shape[0]
+
+        X = np.concatenate([A,B],axis=1)
+        X.sort()
+
+        bins = np.asarray([np.linspace(np.min(x), np.max(x), int(num_bin)) for x in X])
+
+        digitized = digitized_score(X, bins)
+
+        S = np.sum(digitized[:, m:], axis=1).astype(np.int32)
+        return digitized.ravel(), m, n, S.max(), n_samples, bins,S
+
+    aDim, bDim = A.ndim,B.ndim
+    assert aDim == bDim, "A and B does not have same dimensions!"
+    
+    if aDim == 1:
+        A = A.reshape(1,-1)
+        B = B.reshape(1,-1)
+    a_n, b_n = A.shape[0], B.shape[0]
+    assert a_n == b_n, "A and B does not have the same amount of experiments!"
+
+    z, m, n, Smax, n_samples, bins, S =  GreenFloatDataPreProcess(A,B, num_bin)
+
+    height = m + 1
+    width = Smax + 1
+    z_height = m+n
+
+    int_bits = 4
+    double_bits = 8
+
+    memory_bits = z_height * n_samples * int_bits + 2 * width * height * n_samples * double_bits
+
+    memory_MIB = memory_bits / 1000000 * 0.953674
+
+    return memory_MIB
+
+
 def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
     """Calculate permutation distribution and p-values for float samples.
         Args:
@@ -135,6 +199,55 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
     else:
         return p_values_arr
        
+def GreenIntCuda_memcheck(A,B):
+    def GreenIntDataPreProcess(A, B):
+        """Preprocess data for Green's algorithm.
+        Args:
+            A (array): Samples A.
+            B (array): Samples B.
+        Returns:
+             combined data, size of A, size of B, maximum sum, number of samples,
+             and array of Sums.  
+        """
+        m = A.shape[1]
+        n = B.shape[1]
+        A_n_samples = A.shape[0]
+        B_n_samples = B.shape[0]
+    
+        assert A_n_samples == B_n_samples, "A and B does not have same experiments!"
+        n_samples = A_n_samples
+
+        z = np.concatenate((A,B),axis=1)
+        z.sort(1)
+        z -= z.min(1, keepdims=True)
+
+        S = z[:, m:].sum(1, keepdims=True)
+    
+        return z.ravel(), m, n, S.max(), n_samples, S.ravel()
+
+    aDim, bDim = A.ndim,B.ndim
+    assert aDim == bDim, "A and B does not have same dimensions!"
+    
+    if aDim == 1:
+        A = A.reshape(1,-1)
+        B = B.reshape(1,-1)
+    a_n, b_n = A.shape[0], B.shape[0]
+    assert a_n == b_n, "A and B does not have the same amount of experiments!"
+
+    z, m, n, Smax, n_samples, S =  GreenIntDataPreProcess(A,B)
+
+    height = m + 1
+    width = Smax + 1
+    z_height = m+n
+
+    int_bits = 4
+    double_bits = 8
+
+    memory_bits = z_height * n_samples * int_bits + 2 * width * height * n_samples * double_bits
+
+    memory_MIB = memory_bits / 1000000 * 0.953674
+
+    return memory_MIB
 
 
 def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
