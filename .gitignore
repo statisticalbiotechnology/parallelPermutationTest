@@ -9,3 +9,9 @@ oldNotebooks
 oldPyFiles
 oldPermC
 oldPackageFiles
+.vscode
+.DS_Store
+build
+green.o
+libgreen.a
+temp.o
