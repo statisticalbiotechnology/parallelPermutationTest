@@ -15,3 +15,5 @@ build
 green.o
 libgreen.a
 temp.o
+green/_oldGreen.cu
+permutationTest/__pycache__
