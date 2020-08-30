@@ -5,3 +5,5 @@ data
 .Rhistory
 vscode/
 mplGreenIgnore.ipynb
+oldNotebooks
+*.py
