@@ -6,4 +6,7 @@ data
 vscode/
 mplGreenIgnore.ipynb
 oldNotebooks
-*.py
+cuda_fill_array.py
+run.py
+significance_of_mean_cuda.py
+utils2.py
