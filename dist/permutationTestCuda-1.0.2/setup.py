@@ -2,9 +2,7 @@ import os
 ''' from distutils.core import setup, Extension '''
 ''' import setuptools '''
 from setuptools import setup, Extension, Command, find_packages
-import os
 
-os.system("make build")
 
 import numpy as np
 
@@ -29,14 +27,14 @@ extra_compile_args = ["-fopenmp","-fno-wrapv"]
 extra_link_args=['-fopenmp']
 
 
-setup(name = 'permutationTestCuda', version = '1.0.9',  \
+setup(name = 'permutationTestCuda', version = '1.0.2',  \
    ext_modules = [
       Extension('permutationTestCuda', ['permutationTestCuda.cpp'],
       extra_compile_args=extra_compile_args,
       extra_link_args=extra_link_args,
       include_dirs=[np.get_include(), os.path.join(CUDA_PATH, "include")],
       libraries=["green", "cudart"],
-        library_dirs = [".", os.path.join(CUDA_PATH, "lib64"), "./green"],
+      library_dirs = [".", os.path.join(CUDA_PATH, "lib64")],
 )],
     url="https://github.com/statisticalbiotechnology/parallelGreen",
     author="Markus Ekvall",

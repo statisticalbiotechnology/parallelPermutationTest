@@ -2,9 +2,7 @@ import os
 ''' from distutils.core import setup, Extension '''
 ''' import setuptools '''
 from setuptools import setup, Extension, Command, find_packages
-import os
 
-os.system("make build")
 
 import numpy as np
 
@@ -26,10 +24,10 @@ if not os.path.isdir(os.path.join(CUDA_PATH, "include")):
     exit(0)
 
 extra_compile_args = ["-fopenmp","-fno-wrapv"]
-extra_link_args=['-fopenmp']
+extra_link_args=['-fopenmp', '-L./']
 
 
-setup(name = 'permutationTestCuda', version = '1.0.9',  \
+setup(name = 'permutationTestCuda', version = '1.0.7',  \
    ext_modules = [
       Extension('permutationTestCuda', ['permutationTestCuda.cpp'],
       extra_compile_args=extra_compile_args,
