@@ -1,6 +1,4 @@
 import os
-''' from distutils.core import setup, Extension '''
-''' import setuptools '''
 from setuptools import setup, Extension, Command, find_packages
 import os
 
