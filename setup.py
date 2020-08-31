@@ -1,5 +1,9 @@
 import os
-from distutils.core import setup, Extension
+''' from distutils.core import setup, Extension '''
+''' import setuptools '''
+from setuptools import setup, Extension, Command, find_packages
+
+
 import numpy as np
 
 os.environ["CC"] = "g++"
@@ -30,8 +34,11 @@ setup(name = 'permutationTestCuda', version = '1.0',  \
       extra_link_args=extra_link_args,
       include_dirs=[np.get_include(), os.path.join(CUDA_PATH, "include")],
       libraries=["green", "cudart"],
-      library_dirs = [".", os.path.join(CUDA_PATH, "lib64")]
+      library_dirs = [".", os.path.join(CUDA_PATH, "lib64")],
 )],
+    url="https://github.com/statisticalbiotechnology/parallelGreen",
+    author="Markus Ekvall",
+     author_email="marekv@kth.se",
     package_dir={'permutationTest': 'permutationTest'},
     packages=['permutationTest'],
  )

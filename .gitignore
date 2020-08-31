@@ -17,3 +17,4 @@ libgreen.a
 temp.o
 green/_oldGreen.cu
 permutationTest/__pycache__
+permutationTestCuda.egg-info
