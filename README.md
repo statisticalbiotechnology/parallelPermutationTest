@@ -44,7 +44,8 @@ for size in listsizes:
 ```
 
 
-![alt text](/figures/normal_N.png)
+![alt text](/images/parallel_perm.svg)
+
 
 ## Authors
 
