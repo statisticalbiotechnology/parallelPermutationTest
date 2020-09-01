@@ -44,7 +44,7 @@ for size in listsizes:
 ```
 
 
-![alt text](/images/parallel_perm.svg)
+![alt text](/images/parallel_perm.svg){:height="700px" width="400px"}
 
 
 ## Authors
