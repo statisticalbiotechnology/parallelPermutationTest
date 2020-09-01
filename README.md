@@ -1,4 +1,4 @@
-<img src="/images/parallelPermTest.png" height="80px" max-width="100%">
+<img src="/images/parallelPermTest.png" height="100px" max-width="100%">
 
 ## Getting Started
 
