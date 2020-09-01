@@ -1,4 +1,4 @@
-<img src="/images/parallel_perm_crop.svg">
+<img src="/images/parallel_perm_crop.svg" height="100" max-width="100%" >
 
 ## Getting Started
 
