@@ -1,4 +1,4 @@
-<img src="/images/parallel_perm_crop.svg" width="300" height="200">
+<img src="/images/parallel_perm_crop.svg">
 
 ## Getting Started
 
