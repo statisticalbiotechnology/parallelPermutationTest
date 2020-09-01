@@ -1,4 +1,4 @@
-<img src="/images/perm.png">
+<img src="/images/perm.png" height="150px" max-width="100%">
 
 ## Getting Started
 
