@@ -17,7 +17,7 @@ Numpy and CUDA
 
 # Tutorial
 
-## Integer data
+## Integer values
 
 
 ```
@@ -43,7 +43,7 @@ CPU times: user 4.74 s, sys: 56.1 ms, total: 4.79 s
 Wall time: 4.78 s
 ````
 
-## Small Floating Data
+## Small Dataset: Floating values
 
 ```
 #Daily S&P500 data from 1986==>
@@ -87,7 +87,7 @@ CPU times: user 18.1 ms, sys: 20 µs, total: 18.1 ms
 Wall time: 17.3 ms
 ```
 
-## Large Floating Data
+## Large Dataset: Floating values
 ```
 NotTNP_df = pd.read_csv("experiment_data/experiment6/notTNPdf")
 TNP_df = pd.read_csv("experiment_data/experiment6/TNPdf")
