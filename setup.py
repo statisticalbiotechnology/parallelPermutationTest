@@ -27,9 +27,9 @@ extra_compile_args = ["-fopenmp","-fno-wrapv"]
 extra_link_args=['-fopenmp']
 
 
-setup(name = 'permutationTestCuda', version = '1.0.9',  \
+setup(name = 'parallelPermutationTest', version = '1.0.0',  \
    ext_modules = [
-      Extension('permutationTestCuda', ['permutationTestCuda.cpp'],
+      Extension('permutationTest', ['permutationTest.cpp'],
       extra_compile_args=extra_compile_args,
       extra_link_args=extra_link_args,
       include_dirs=[np.get_include(), os.path.join(CUDA_PATH, "include")],
@@ -39,6 +39,6 @@ setup(name = 'permutationTestCuda', version = '1.0.9',  \
     url="https://github.com/statisticalbiotechnology/parallelGreen",
     author="Markus Ekvall",
      author_email="marekv@kth.se",
-    package_dir={'permutationTest': 'permutationTest'},
-    packages=['permutationTest'],
+    package_dir={'parallelPermutationTest': 'parallelPermutationTest'},
+    packages=['parallelPermutationTest'],
  )

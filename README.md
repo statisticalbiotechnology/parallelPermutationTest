@@ -1,50 +1,119 @@
 <img src="/images/parallelPermTest.png">
 
-## Getting Started
-
-### Prerequisites
-
-python3.6 has been used to test out the repository. The installation uses anaconda, but it is not necessary.
-
-A GPU that uses CUDA is necessary.
-
-Only Python-specific requirements are Numba, Numpy, and Matplotlib.
-
-## Run time performance increase.
-
-The GPU allows for substantial speed up for larger matrices.
-
+# Installation
 ```
-listsizes = [20,60,120,160]
-plain_shift = list()
-gpu_shift = list()
-bins = 200
-for size in listsizes:
-    np.random.seed(1)
-    A = np.asarray([np.random.beta(2.0,5.0,size) for _ in range(5)])
-    B = np.asarray([np.random.beta(2.0,5.0,size) for _ in range(5)])
-    start = time.time()
-    P = calibration_test(A,B)
-    end = time.time()
-    plain_shift.append(round(end - start,3))
-    print("Plain")
-    print(round(end - start,3))
-    
-    start = time.time()
-    SGM = significance_of_mean_cuda(bins,dtype_v=np.uint16,dtype_A=np.float64)
-    SGM.run(A,B)
-    P = SGM.get_p_values()
-    end = time.time()
-    t_gpu = end - start
-    gpu_shift.append(t_gpu)
-    print("GPU: ", t_gpu)
-    
-    print(np.allclose(PC,P))
+pip install parallelPermutationTest
+```
+or
+```
+git clone https://github.com/statisticalbiotechnology/parallelPermutationTest.git
+cd parallelPermutationTest
+make
 ```
 
+# Requirement
 
-<!-- ![alt text](/images/parallel_perm.svg){:height="700px" width="400px"} -->
+Numpy and CUDA
 
+# Tutorial
+
+## Integer data
+
+
+```
+import parallelPermutationTest as ppt
+import numpy as np
+import pandas as pd
+
+n_samples = 1
+n = m =  500
+
+data = lambda n,n_samples : np.asarray([np.random.randint(0,n,n,dtype=np.int32) for _ in range(n_samples)])
+
+np.random.seed(42)
+A,B = data(n,1), data(n,1)
+```
+
+```
+%time p_green_gpu = ppt.GreenIntCuda(A,B)
+```
+
+```
+CPU times: user 4.74 s, sys: 56.1 ms, total: 4.79 s
+Wall time: 4.78 s
+````
+
+## Small Floating Data
+
+```
+#Daily S&P500 data from 1986==>
+url = "https://raw.githubusercontent.com/Patrick-David/Stocks_Significance_PHacking/master/spx.csv"
+df = pd.read_csv(url,index_col='date', parse_dates=True)
+
+
+daily_ret = df['close'].pct_change()
+daily_ret.dropna(inplace=True)
+
+mnthly_annu = daily_ret.resample('M').std()* np.sqrt(12)
+
+dec_vol = mnthly_annu[mnthly_annu.index.month==12]
+rest_vol = mnthly_annu[mnthly_annu.index.month!=12]
+```
+
+```
+dec_vol.head(2)
+```
+
+```
+date
+1986-12-31    0.026474
+1987-12-31    0.061435
+Name: close, dtype: float64
+```
+
+```
+(dec_vol.values.shape, rest_vol.values.shape)
+```
+
+```
+(32,), (358,))
+```
+
+```
+%time p = ppt.GreenFloatCuda(dec_vol.values, rest_vol.values, 500)
+```
+```
+CPU times: user 18.1 ms, sys: 20 µs, total: 18.1 ms
+Wall time: 17.3 ms
+```
+
+## Large Floating Data
+```
+NotTNP_df = pd.read_csv("experiment_data/experiment6/notTNPdf")
+TNP_df = pd.read_csv("experiment_data/experiment6/TNPdf")
+```
+
+```
+(TNP_df.shape, NotTNP_df.shape)
+```
+```
+((8051, 26), (8051, 80))
+```
+```
+n_bins = 100
+ppt.GreenFloatCuda_memcheck(TNP_df.values, NotTNP_df.values, n_bins)
+```
+```
+Warning: The data requires 23503.55Mib, and the GPU has 7718Mib available, so there is 15785.55Mib too little memory. Consider dividing the data into batches.
+```
+```
+batch_size = int(TNP_df.shape[0] / 4)
+%time p_values = ppt.GreenFloatCuda(TNP_df.values, NotTNP_df.values, 100, batch_size=batch_size)
+```
+```
+CPU times: user 10.5 s, sys: 1.26 s, total: 11.8 s
+Wall time: 11.8 s
+```
 
 ## Authors
 

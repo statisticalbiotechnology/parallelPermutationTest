@@ -20,3 +20,5 @@ permutationTest/__pycache__
 permutationTestCuda.egg-info
 dist
 .pypirc
+notebooks/data
+*.egg
