@@ -266,7 +266,7 @@ double * greenCuda(int *Z_data_, int * all_S_, int m, int n, int S, int n_sample
     if (i % 2 == 1) {
    
         for (i=0; i< n_samples; i++) {
-            msum = 0;
+            /* msum = 0;
             for (s = 0; s < S+1; s++) {
                 msum += N_old[((m-1) + i * height)*width  + s];
             }
@@ -274,18 +274,26 @@ double * greenCuda(int *Z_data_, int * all_S_, int m, int n, int S, int n_sample
     
             for (s = 0; s < S+1; s++) {
                 dx[(S + 1) * i + s] = N_old[((m-1) + i * height)*width  + s] / msum;         
-            }         
+            }        */  
+           
+            for (s = 0; s < S+1; s++) {
+                dx[(S + 1) * i + s] = N_old[((m-1) + i * height)*width  + s];         
+            }       
         }
     } else {
 
         for (i=0; i< n_samples; i++) {
-            msum = 0;
-
+            /* msum = 0;
             for (s = 0; s < S+1; s++) {
                 msum += N[((m-1) + i * height)*width  + s];
             }
             for (s = 0; s < S+1; s++) {
                 dx[(S + 1) * i + s] = N[((m-1) + i * height)*width  + s] / msum;
+            }  */
+
+           
+            for (s = 0; s < S+1; s++) {
+                dx[(S + 1) * i + s] = N[((m-1) + i * height)*width  + s];
             } 
         }
     }  

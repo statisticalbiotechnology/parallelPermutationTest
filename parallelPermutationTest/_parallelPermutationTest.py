@@ -103,7 +103,7 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
         Returns:
             Array with p-values and permutation distribution(optional).
     """
-    def pValFloat(pdist, n_samples, S, A ,bins, midP=False):
+    def pValFloat(NNN, n_samples, S, A , B, bins, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -116,16 +116,32 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
             p-values
         """
         P = np.zeros(n_samples)
-        dperm = list()
-        for i, (a,b,pmf) in enumerate(zip(A,bins, pdist)):
+        for i, (a, b, _bin, NN) in enumerate(zip(A, B, bins, NNN)):
 
-            dperm.append(pmf)
-            a_ = np.digitize(a, b).astype(np.int32) - 1
+            if len(a)>len(b):
+                score = sum(np.digitize(b, _bin).astype(np.int32) - 1)
+            else:
+                score = sum(np.digitize(a, _bin).astype(np.int32) - 1)
+
+            
+            if midP:
+                one_side = NN[score] / 2 
+            else:
+                one_side = NN[score]
+
+
+            if score < S[i]:
+                one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+                p = one_side / float(np.sum(NN))
+            
+            P[i] = 2 * min( p, (1-p))
+
+            ''' a_ = np.digitize(a, b).astype(np.int32) - 1
             if midP:
                 p = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
             else:
                 p = np.sum(pmf[int(sum(a_)) : (int(S[i]) + 1)])
-            P[i] = 2 * min( p, (1-p))
+            P[i] = 2 * min( p, (1-p)) '''
                 
         return P
 
@@ -164,8 +180,10 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
 
         digitized = digitized_score(X, bins)
 
-        S = np.sum(digitized[:, m:], axis=1).astype(np.int32)
-        return digitized.ravel(), m, n, S.max(), n_samples, bins,S
+        K = min(m,n)
+
+        S = np.sum(digitized[:, -K:], axis=1).astype(np.int32)
+        return digitized.ravel(), min(m,n), max(m,n), S.max(), n_samples, bins, S
 
     aDim, bDim = A.ndim,B.ndim
     assert aDim == bDim, "A and B does not have same dimensions!"
@@ -193,10 +211,15 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        pdist = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax+1)
-        p_values = pValFloat(pdist.reshape(n_samples, Smax+1), n_samples, S, a ,bins)
+        ''' pdist = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax + 1)
+        p_values = pValFloat(pdist.reshape(n_samples, Smax + 1), n_samples, S, a, bins)
+        pdist_list.append(pdist) '''
 
-        pdist_list.append(pdist)
+        NN = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax + 1)
+        
+        p_values = pValFloat(NN.reshape(n_samples, Smax+1), n_samples, S, a ,b,bins)
+
+        pdist_list.append(NN)
         p_val_list.append(p_values)
 
     pdist_arr = np.vstack(pdist_list)
@@ -623,11 +646,12 @@ def GreenFloat(A,B, num_bin, return_dperm=False):
 
         digitized = digitized_score(X, bins)
 
+        K = min(m,n)
 
-        S = np.sum(digitized[:, m:], axis=1).astype(np.int32)
-        return digitized.ravel(), m, n, S.max(), n_samples, bins, S
+        S = np.sum(digitized[:, -K:], axis=1).astype(np.int32)
+        return digitized.ravel(), min(m,n), max(m,n), S.max(), n_samples, bins, S
 
-    def pValFloat(pdist, n_samples, S, A ,bins, midP=False):
+    def pValFloat(NN, n_samples, S, A , B, bins, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -642,13 +666,22 @@ def GreenFloat(A,B, num_bin, return_dperm=False):
 
         P = np.zeros(n_samples)
         dperm = list()
-        a,b,pmf,s = A[0],bins[0], pdist, S[0]
-    
-        a_ = np.digitize(a, b).astype(np.int32) - 1
-        if midP:
-            p = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(s)+1)])
+        a,b,_bin,s = A[0],B[0],bins[0], S[0]
+
+        if len(a)>len(b):
+            score = sum(np.digitize(b, _bin).astype(np.int32) - 1)
         else:
-            p = np.sum(pmf[int(sum(a_)) : (int(s) + 1)])
+            score = sum(np.digitize(a, _bin).astype(np.int32) - 1)
+
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+
+        if score<S:    
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+            p = one_side / float(np.sum(NN))
+            
         P[0] = 2 * min( p, (1-p))
                 
         return P
@@ -672,11 +705,14 @@ def GreenFloat(A,B, num_bin, return_dperm=False):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        dperm = np.array(Green(z, m, n, S))
+        NN = np.array(Green(z, m, n, S))
 
-        p_val = pValFloat(dperm, n_samples, S, a[np.newaxis,:] ,bins)
         
-        pdist_list.append(dperm)
+        ''' NN = np.divide(dperm, np.sum(dperm)) '''
+
+        p_val = pValFloat(NN, n_samples, S, a[np.newaxis,:] ,b[np.newaxis,:], bins)
+        
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list).ravel()
@@ -733,11 +769,12 @@ def GreenFloatMultiThread(A,B, num_bin, return_dperm=False):
 
         digitized = digitized_score(X, bins)
 
+        K = min(m,n)
 
-        S = np.sum(digitized[:, m:], axis=1).astype(np.int32)
-        return digitized.ravel(), m, n, S.max(), n_samples, bins, S
+        S = np.sum(digitized[:, -K:], axis=1).astype(np.int32)
+        return digitized.ravel(), min(m,n), max(m,n), S.max(), n_samples, bins, S
 
-    def pValFloat(pdist, n_samples, S, A ,bins, midP=False):
+    def pValFloat(NN, n_samples, S, A , B, bins, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -752,13 +789,22 @@ def GreenFloatMultiThread(A,B, num_bin, return_dperm=False):
 
         P = np.zeros(n_samples)
         dperm = list()
-        a,b,pmf,s = A[0],bins[0], pdist, S[0]
-    
-        a_ = np.digitize(a, b).astype(np.int32) - 1
-        if midP:
-            p = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(s)+1)])
+        a,b,_bin,s = A[0],B[0],bins[0], S[0]
+
+        if len(a)>len(b):
+            score = sum(np.digitize(b, _bin).astype(np.int32) - 1)
         else:
-            p = np.sum(pmf[int(sum(a_)) : (int(s) + 1)])
+            score = sum(np.digitize(a, _bin).astype(np.int32) - 1)
+
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+
+        if score<S:    
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+            p = one_side / float(np.sum(NN))
+            
         P[0] = 2 * min( p, (1-p))
                 
         return P
@@ -782,11 +828,12 @@ def GreenFloatMultiThread(A,B, num_bin, return_dperm=False):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        dperm = np.array(GreenOpenMP(z, m, n, S))
+        ''' dperm = np.array(GreenOpenMP(z, m, n, S)) '''
+        NN = np.array(GreenOpenMP(z, m, n, S))
 
-        p_val = pValFloat(dperm, n_samples, S, a[np.newaxis,:] ,bins)
+        p_val = pValFloat(NN, n_samples, S, a[np.newaxis,:] ,b[np.newaxis,:], bins)
         
-        pdist_list.append(dperm)
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list)

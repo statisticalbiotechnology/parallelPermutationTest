@@ -286,24 +286,34 @@ for (i = 1; i < (m + n) + 1; i++)
 PyObject *result = PyList_New(0);
 double msum = 0;
 if (i % 2 == 1) {
-    for (s = 0; s < S+1; s++) {
+    /* for (s = 0; s < S+1; s++) {
         msum += N_old[width*(m-1) + s];
     }
 
     
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum));
+    } */
+
+    for (s = 0; s < S+1; s++) {
+        PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s]));
     }
 
 
 } else {
-    for (s = 0; s < S+1; s++) {
+    /* for (s = 0; s < S+1; s++) {
         msum += N[width*(m-1) + s];
     }
 
     
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s] / msum));
+        
+    } */
+
+    
+    for (s = 0; s < S+1; s++) {
+        PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s]));
         
     }
 } 
@@ -393,7 +403,7 @@ for (i = 1; i < (m + n) + 1; i++)
 
 PyObject *result = PyList_New(0);
 double msum = 0;
-if (i % 2 == 1) {
+/* if (i % 2 == 1) {
     for (s = 0; s < S+1; s++) {
         msum += N_old[width*(m-1) + s];
     }
@@ -401,17 +411,34 @@ if (i % 2 == 1) {
     
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum));
+    } */
+
+if (i % 2 == 1) {
+    for (s = 0; s < S+1; s++) {
+        msum += N_old[width*(m-1) + s];
+    }
+
+    
+    for (s = 0; s < S+1; s++) {
+     /*    PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum)); */
+        PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] ));
     }
 
 
 } else {
-    for (s = 0; s < S+1; s++) {
+    /* for (s = 0; s < S+1; s++) {
         msum += N[width*(m-1) + s];
     }
 
     
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s] / msum));
+        
+    } */
+
+   
+    for (s = 0; s < S+1; s++) {
+        PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s]));
         
     }
 } 

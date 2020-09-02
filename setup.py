@@ -27,7 +27,7 @@ extra_compile_args = ["-fopenmp","-fno-wrapv"]
 extra_link_args=['-fopenmp']
 
 
-setup(name = 'parallelPermutationTest', version = '1.0.0',  \
+setup(name = 'parallelPermutationTest', version = '1.0.1',  \
    ext_modules = [
       Extension('permutationTest', ['permutationTest.cpp'],
       extra_compile_args=extra_compile_args,
