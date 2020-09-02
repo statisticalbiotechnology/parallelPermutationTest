@@ -110,6 +110,9 @@ int min(int num1, int num2)
 }
 
 static PyObject* coinShift(PyObject* self, PyObject* args){
+    /* 
+    Credit: hnilsson (https://github.com/cran/coin)
+     */
   
   
 

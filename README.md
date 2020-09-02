@@ -122,4 +122,5 @@ Wall time: 11.8 s
 ## Acknowledgments
 
 * Pagano and Tritchler(1983), and Zimmerman (1985) for unparalleled version of the shift-method.
+* hnilsson: https://github.com/cran/coin
 

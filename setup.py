@@ -39,6 +39,6 @@ setup(name = 'parallelPermutationTest', version = '1.0.0',  \
     url="https://github.com/statisticalbiotechnology/parallelGreen",
     author="Markus Ekvall",
      author_email="marekv@kth.se",
-    package_dir={'parallelPermutationTest': 'parallelPermutationTest'},
+    package_dir={'_parallelPermutationTest': '_parallelPermutationTest'},
     packages=['parallelPermutationTest'],
  )
