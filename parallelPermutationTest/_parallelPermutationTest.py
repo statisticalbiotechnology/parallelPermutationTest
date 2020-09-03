@@ -136,13 +136,6 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
             
             P[i] = 2 * min( p, (1-p))
 
-            ''' a_ = np.digitize(a, b).astype(np.int32) - 1
-            if midP:
-                p = pmf[int(sum(a_))] / 2 + np.sum(pmf[int(sum(a_))+1:(int(S[i])+1)])
-            else:
-                p = np.sum(pmf[int(sum(a_)) : (int(S[i]) + 1)])
-            P[i] = 2 * min( p, (1-p)) '''
-                
         return P
 
     def digitized_score(X, bins):
@@ -211,10 +204,6 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        ''' pdist = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax + 1)
-        p_values = pValFloat(pdist.reshape(n_samples, Smax + 1), n_samples, S, a, bins)
-        pdist_list.append(pdist) '''
-
         NN = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax + 1)
         
         p_values = pValFloat(NN.reshape(n_samples, Smax+1), n_samples, S, a ,b,bins)
@@ -298,7 +287,7 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
         Returns:
             Array with p-values and permutation distribution(optional).
     """
-    def GreenPvalInt(pdist, n_samples,S,A):
+    def GreenPvalInt(NNN, n_samples, S, A,B, z, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -310,11 +299,27 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
         """
         P = np.zeros(n_samples)
         dperm = list()
-        for i, (a,pmf) in enumerate(zip(A, pdist)):
-            dperm.append(pmf)
-            a = a - a.min()
+        for i, (a, b, NN) in enumerate(zip(A, B, NNN)):
+
+            if len(a)>len(b):
+                score = (b - np.min(z[i])).sum()
+            else:
+                score = (a - np.min(z|i)).sum()
+            
+            if midP:
+                one_side = NN[score] / 2 
+            else:
+                one_side = NN[score]
+
+            if score < S[i]:
+                one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+            p = one_side / float(np.sum(NN))
+            
+            P[i] = 2 * min( p, (1-p))
+            
+            ''' a = a - a.min()
             p = np.sum(pmf[int(sum(a)) : (int(S[i]) + 1)])
-            P[i] = 2 * min( p, (1-p))        
+            P[i] = 2 * min( p, (1-p))    '''     
         return P
 
     def GreenIntDataPreProcess(A, B):
@@ -338,11 +343,12 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
         z.sort(1)
         z -= z.min(1, keepdims=True)
 
-        S = z[:, m:].sum(1, keepdims=True)
-    
-        return z.ravel(), m, n, S.max(), n_samples, S.ravel()
+        K = min(m,n)
 
+        S = np.sum(z[:, -K:], axis=1).astype(np.int32)
 
+        return z.ravel(), min(m,n), max(m,n), S.max(), n_samples, S.ravel()
+     
     aDim, bDim = A.ndim,B.ndim
     assert aDim == bDim, "A and B does not have same dimensions!"
     
@@ -369,10 +375,10 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        pdist = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax+1)
-        p_values = GreenPvalInt(pdist, n_samples, S, a)
+        NN = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax+1)
+        p_values = GreenPvalInt(NN, n_samples, S, a, b, z)
 
-        pdist_list.append(pdist)
+        pdist_list.append(NN)
         p_val_list.append(p_values)
 
     pdist = np.vstack(pdist_list).ravel()
@@ -405,20 +411,22 @@ def CoinShiftInt(A,B, return_dperm=False):
         """
         scores = np.concatenate((A,B)).astype(np.int32)
         n = scores.shape[0]
-        m = A.shape[0]
+        m = min(B.shape[0], A.shape[0])
 
         add = np.min(scores)
         scores = scores - add
         scores.sort()
-        m_b = sum(scores[m:])
+
+        K = m
+        m_b = sum(scores[-K:])
 
         score_a = np.ones(n, dtype=np.int32)
         
         im_a = m
         im_b = m_b
-        return score_a, scores, im_a, im_b, n
+        return score_a, scores, im_a, im_b, n, add
 
-    def get_p_coin(pdist, A):
+    def get_p_coin(NN, A, B,S,add, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -426,11 +434,26 @@ def CoinShiftInt(A,B, return_dperm=False):
         Returns:
             p-values
         """
-        a = A
-    
-        p = pdist[(a-min(a)).sum()-1:].sum()
-        p = 2 * min( p, (1-p))
-        return p 
+
+        if len(a)>len(b):
+            score = (b - add).sum()
+        else:
+            score = (a - add).sum()
+        
+        score = score - 1
+        
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+
+        if score < S:
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+        p = one_side / float(np.sum(NN))
+            
+        p = 2 * min(p, (1 - p))
+        
+        return p
 
     aDim, bDim = A.ndim,B.ndim
     assert aDim == bDim, "A and B does not have same dimensions!"
@@ -444,10 +467,13 @@ def CoinShiftInt(A,B, return_dperm=False):
     pdist_list = list()
     p_val_list = list()
     for a, b in zip(A, B):
-        dperm = np.array(coinShift(*getDataCoinShift(a, b)))
-        p_val = get_p_coin(dperm, a)
+
+        score_a, scores, im_a, im_b, n, add = getDataCoinShift(a, b)
+
+        NN = np.array(coinShift(score_a, scores, im_a, im_b, n))
+        p_val = get_p_coin(NN, a, b, im_b, add)
         
-        pdist_list.append(dperm)
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list)
@@ -485,12 +511,13 @@ def GreenInt(A,B, return_dperm=False):
         z = np.concatenate((A,B))
         z.sort()
         z = z - min(z)
-        S = z[m:].sum()
+        K = min(m,n)
 
-        z = z.astype(np.int32)
-        return z, int(m), int(n), int(S)
+        S = np.sum(z[-K:]).astype(np.int32)
+        return z, int(min(m, n)), int(max(m, n)), int(S)
 
-    def get_p(pdist, a):
+
+    def get_p(NN, a, b, S, z, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -498,7 +525,20 @@ def GreenInt(A,B, return_dperm=False):
         Returns:
             p-values
         """
-        p = pdist[(a-min(a)).sum():].sum()
+
+        if len(a)>len(b):
+            score = (b - np.min(z)).sum()
+        else:
+            score = (a - np.min(z)).sum()
+            
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+        if score < S:
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+        p = one_side / float(np.sum(NN))
+            
         p = 2 * min( p, (1-p))
         return p
 
@@ -514,10 +554,13 @@ def GreenInt(A,B, return_dperm=False):
     pdist_list = list()
     p_val_list = list()
     for a, b in zip(A, B):
-        dperm = np.array(Green(*getDataGreen(a, b)))
-        p_val = get_p(dperm, a)
+
+        z, m, n, S = getDataGreen(a, b)
+
+        NN = np.array(Green(z, m, n, S))
+        p_val = get_p(NN, a, b, S, z)
         
-        pdist_list.append(dperm)
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list).ravel()
@@ -557,10 +600,12 @@ def GreenIntMultiThread(A,B, return_dperm=False):
         z = z - min(z)
         S = z[m:].sum()
 
-        z = z.astype(np.int32)
-        return z, int(m), int(n), int(S)
+        K = min(m,n)
 
-    def get_p(pdist, a):
+        S = np.sum(z[-K:]).astype(np.int32)
+        return z, int(min(m, n)), int(max(m, n)), int(S)
+
+    def get_p(NN, a, b, S, z, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -568,7 +613,19 @@ def GreenIntMultiThread(A,B, return_dperm=False):
         Returns:
             p-values
         """
-        p = pdist[(a-min(a)).sum():].sum()
+        if len(a)>len(b):
+            score = (b- np.min(z)).sum()
+        else:
+            score = (a - np.min(z)).sum()
+            
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+        if score < S:
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+        p = one_side / float(np.sum(NN))
+            
         p = 2 * min( p, (1-p))
         return p
 
@@ -584,10 +641,13 @@ def GreenIntMultiThread(A,B, return_dperm=False):
     pdist_list = list()
     p_val_list = list()
     for a, b in zip(A, B):
-        dperm = np.array(GreenOpenMP(*getDataGreen(a, b)))
-        p_val = get_p(dperm, a)
+
+        z, m, n, S = getDataGreen(a, b)
+
+        NN = np.array(GreenOpenMP(z, m, n, S))
+        p_val = get_p(NN, a, b, S, z)
         
-        pdist_list.append(dperm)
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list).ravel()
@@ -707,9 +767,6 @@ def GreenFloat(A,B, num_bin, return_dperm=False):
     
         NN = np.array(Green(z, m, n, S))
 
-        
-        ''' NN = np.divide(dperm, np.sum(dperm)) '''
-
         p_val = pValFloat(NN, n_samples, S, a[np.newaxis,:] ,b[np.newaxis,:], bins)
         
         pdist_list.append(NN)
@@ -828,7 +885,6 @@ def GreenFloatMultiThread(A,B, num_bin, return_dperm=False):
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
-        ''' dperm = np.array(GreenOpenMP(z, m, n, S)) '''
         NN = np.array(GreenOpenMP(z, m, n, S))
 
         p_val = pValFloat(NN, n_samples, S, a[np.newaxis,:] ,b[np.newaxis,:], bins)
@@ -866,6 +922,8 @@ def CoinShiftFloat(A,B, num_bin, return_dperm=False):
         for i, (x,b) in enumerate(zip(X,bins)):
             digitized[i,:] = np.digitize(x, b).astype(np.int32) - 1
         return digitized
+
+
     def getDataCoinShift(A, B, num_bin):
       
         scores = np.concatenate([A,B],axis=1)
@@ -876,20 +934,23 @@ def CoinShiftFloat(A,B, num_bin, return_dperm=False):
 
 
         n = scores.shape[0]
-        m = A.shape[1]
+        m = min(B.shape[1], A.shape[1])
 
         add = np.min(scores)
         scores = scores - add
         scores.sort()
-        m_b = sum(scores[m:])
+
+        K = m
+        
+        m_b = sum(scores[-K:])
 
         score_a = np.ones(n, dtype=np.int32)
         
         im_a = m
         im_b = m_b
-        return score_a.ravel(), scores.ravel(), im_a, im_b, n, bins
+        return score_a.ravel(), scores.ravel(), im_a, im_b, n, bins, add
 
-    def get_p_coin(pdist, A, bins):
+    def get_p_coin(NN, A, B, bins,S, midP=False):
         """Calculate p-value for each sub-array
         Args:
             pdist (array): Permutation distribution
@@ -898,12 +959,27 @@ def CoinShiftFloat(A,B, num_bin, return_dperm=False):
         Returns:
             p-values
         """
-        dperm = list()
-        a,b,pmf = A[0],bins[0], pdist
-        a_ = np.digitize(a, b).astype(np.int32) - 1
-        p = np.sum(pmf[int(sum(a_))-1:])
+
+        
+        a,b,_bin= A[0],B[0],bins[0]
+
+        if len(a)>len(b):
+            score = sum(np.digitize(b, _bin).astype(np.int32) - 1)
+        else:
+            score = sum(np.digitize(a, _bin).astype(np.int32) - 1)
+        score = score - 1
+        if midP:
+            one_side = NN[score] / 2 
+        else:
+            one_side = NN[score]
+
+        if score<S:    
+            one_side += min(np.sum(NN[score + 1 :]), np.sum(NN[:score]))    
+            p = one_side / float(np.sum(NN))
+            
         p = 2 * min( p, (1-p))
-        return p 
+                
+        return p
 
     aDim, bDim = A.ndim,B.ndim
     assert aDim == bDim, "A and B does not have same dimensions!"
@@ -917,13 +993,13 @@ def CoinShiftFloat(A,B, num_bin, return_dperm=False):
     pdist_list = list()
     p_val_list = list()
     for a, b in zip(A, B):
-        score_a, scores, im_a, im_b, n, bins = getDataCoinShift(a[np.newaxis, :], b[np.newaxis, :], num_bin)
+        score_a, scores, im_a, im_b, n, bins, add = getDataCoinShift(a[np.newaxis, :], b[np.newaxis, :], num_bin)
         
-        dperm = np.array(coinShift(score_a, scores, im_a, im_b, n))
+        NN = np.array(coinShift(score_a, scores, im_a, im_b, n))
 
-        p_val = get_p_coin(dperm, a[np.newaxis,:], bins)
+        p_val = get_p_coin(NN, a[np.newaxis,:], b[np.newaxis,:], bins, im_b)
         
-        pdist_list.append(dperm)
+        pdist_list.append(NN)
         p_val_list.append(p_val)
 
     pdist = np.vstack(pdist_list)

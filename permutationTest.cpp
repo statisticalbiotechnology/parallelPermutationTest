@@ -181,14 +181,10 @@ int * iscore_b = (int *)score_b->data;
     std::vector<double> dx(sum_b,0.0);
     
     isb = im_a * (sum_b + 1);
-    for (j = 0; j < sum_b; j++) {
-        dx[j] = dH[isb + j + 1];
-        msum += dx[j];
-        }
-
+    
     PyObject* result = PyList_New(0);
     for (j = 0; j < sum_b; j++){
-      PyList_Append(result, PyFloat_FromDouble(dx[j]/msum));
+      PyList_Append(result, PyFloat_FromDouble(dH[isb + j + 1]));
         }
 
     
@@ -286,31 +282,13 @@ for (i = 1; i < (m + n) + 1; i++)
 PyObject *result = PyList_New(0);
 double msum = 0;
 if (i % 2 == 1) {
-    /* for (s = 0; s < S+1; s++) {
-        msum += N_old[width*(m-1) + s];
-    }
-
     
-    for (s = 0; s < S+1; s++) {
-        PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum));
-    } */
-
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s]));
     }
 
 
 } else {
-    /* for (s = 0; s < S+1; s++) {
-        msum += N[width*(m-1) + s];
-    }
-
-    
-    for (s = 0; s < S+1; s++) {
-        PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s] / msum));
-        
-    } */
-
     
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s]));
@@ -403,15 +381,6 @@ for (i = 1; i < (m + n) + 1; i++)
 
 PyObject *result = PyList_New(0);
 double msum = 0;
-/* if (i % 2 == 1) {
-    for (s = 0; s < S+1; s++) {
-        msum += N_old[width*(m-1) + s];
-    }
-
-    
-    for (s = 0; s < S+1; s++) {
-        PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum));
-    } */
 
 if (i % 2 == 1) {
     for (s = 0; s < S+1; s++) {
@@ -420,23 +389,12 @@ if (i % 2 == 1) {
 
     
     for (s = 0; s < S+1; s++) {
-     /*    PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] / msum)); */
         PyList_Append(result, PyFloat_FromDouble(N_old[width*(m-1) + s] ));
     }
 
 
 } else {
-    /* for (s = 0; s < S+1; s++) {
-        msum += N[width*(m-1) + s];
-    }
 
-    
-    for (s = 0; s < S+1; s++) {
-        PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s] / msum));
-        
-    } */
-
-   
     for (s = 0; s < S+1; s++) {
         PyList_Append(result, PyFloat_FromDouble(N[width*(m-1) + s]));
         
