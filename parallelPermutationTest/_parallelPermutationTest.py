@@ -21,7 +21,7 @@ def batch(Arr, n=1):
         yield Arr[ndx:min(ndx + n, l),:]
 
 
-def GreenFloatCuda_memcheck(A,B, num_bin):
+def GreenFloatCuda_memcheck(A,B, num_bin, return_info_dict=False):
     def digitized_score(X, bins):
         """Digitize the values for each sample.
         Args:
@@ -78,18 +78,23 @@ def GreenFloatCuda_memcheck(A,B, num_bin):
     int_bits = 4
     double_bits = 8
 
-    memory_bits = z_height * n_samples * int_bits + 2 * width * height * n_samples * double_bits
-    memory_MIB = round(memory_bits / 1000000 * 0.953674,2)
+    info_dict = dict()
 
-    gpu_mem = gpu_available_mem()
+    memory_bits = z_height * n_samples * int_bits + 2 * width * height * n_samples * double_bits
+    info_dict["memory_MIB"] = round(memory_bits / 1000000 * 0.953674,2)
+
+    info_dict["gpu_mem"] = gpu_available_mem()
     
-    diff = gpu_mem - memory_MIB
-    diff = round(diff,2)
+    diff = info_dict["gpu_mem"] - info_dict["memory_MIB"]
+    info_dict["diff"] = round(diff,2)
 
     if diff >0:
-        print("The data requires {}Mib, and the GPU has {}Mib available, so there are {}Mib left after data allocation.".format(memory_MIB, gpu_mem, diff))
+        print("The data requires {}Mib, and the GPU has {}Mib available, so there are {}Mib left after data allocation.".format(info_dict["memory_MIB"], info_dict["gpu_mem"], info_dict["diff"]))
     else:
-        print("Warning: The data requires {}Mib, and the GPU has {}Mib available, so there is {}Mib too little memory. Consider dividing the data into batches.".format(memory_MIB, gpu_mem, abs(diff)))
+        print("Warning: The data requires {}Mib, and the GPU has {}Mib available, so there is {}Mib too little memory. Consider dividing the data into batches.".format(info_dict["memory_MIB"], info_dict["gpu_mem"], abs(info_dict["diff"])))
+
+    if return_info_dict:
+        return info_dict
 
 
 def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
@@ -195,6 +200,8 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
     if not batch_size:
         a_batch_size, b_batch_size = A.shape[0], B.shape[0]
     else:
+        batch_size = int(batch_size)
+        
         assert batch_size <= A.shape[0], "Batch-size larger than number of examples."
         a_batch_size, b_batch_size = batch_size, batch_size
      
@@ -218,7 +225,7 @@ def GreenFloatCuda(A,B, num_bin, return_dperm=False, batch_size=None):
     else:
         return p_values_arr
        
-def GreenIntCuda_memcheck(A,B):
+def GreenIntCuda_memcheck(A,B, return_info_dict=False):
     def GreenIntDataPreProcess(A, B):
         """Preprocess data for Green's algorithm.
         Args:
@@ -238,7 +245,11 @@ def GreenIntCuda_memcheck(A,B):
 
         z = np.concatenate((A,B),axis=1)
         z.sort(1)
-        z -= z.min(1, keepdims=True)
+
+        add = z.min(1, keepdims=True)
+        z -= add
+        A -= add
+        B -= add
 
         S = z[:, m:].sum(1, keepdims=True)
     
@@ -262,18 +273,23 @@ def GreenIntCuda_memcheck(A,B):
     int_bits = 4
     double_bits = 8
 
+    info_dict = dict()
+
     memory_bits = z_height * n_samples * int_bits + 2 * width * height * n_samples * double_bits
-    memory_MIB = round(memory_bits / 1000000 * 0.953674,2)
+    info_dict["memory_MIB"] = round(memory_bits / 1000000 * 0.953674,2)
 
-    gpu_mem = gpu_available_mem()
-
-    diff = gpu_mem - memory_MIB
-    diff = round(diff,2)
+    info_dict["gpu_mem"] = gpu_available_mem()
+    
+    diff = info_dict["gpu_mem"] - info_dict["memory_MIB"]
+    info_dict["diff"] = round(diff,2)
 
     if diff >0:
-        print("The data requires {}Mib, and the GPU has {}Mib available, so there are {}Mib left after data allocation.".format(memory_MIB, gpu_mem, diff))
+        print("The data requires {}Mib, and the GPU has {}Mib available, so there are {}Mib left after data allocation.".format(info_dict["memory_MIB"], info_dict["gpu_mem"], info_dict["diff"]))
     else:
-        print("Warning: The data requires {}Mib, and the GPU has {}Mib available, so there is {}Mib too little memory. Consider dividing the data into batches.".format(memory_MIB, gpu_mem, abs(diff)))
+        print("Warning: The data requires {}Mib, and the GPU has {}Mib available, so there is {}Mib too little memory. Consider dividing the data into batches.".format(info_dict["memory_MIB"], info_dict["gpu_mem"], abs(info_dict["diff"])))
+
+    if return_info_dict:
+        return info_dict
 
 
 def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
@@ -302,9 +318,9 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
         for i, (a, b, NN) in enumerate(zip(A, B, NNN)):
 
             if len(a)>len(b):
-                score = (b - np.min(z[i])).sum()
+                score = b.sum()
             else:
-                score = (a - np.min(z|i)).sum()
+                score = a.sum()
             
             if midP:
                 one_side = NN[score] / 2 
@@ -341,13 +357,17 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
 
         z = np.concatenate((A,B),axis=1)
         z.sort(1)
-        z -= z.min(1, keepdims=True)
+        
+        add = z.min(1, keepdims=True)
+        z -= add
+        A -= add
+        B -= add
 
         K = min(m,n)
 
         S = np.sum(z[:, -K:], axis=1).astype(np.int32)
 
-        return z.ravel(), min(m,n), max(m,n), S.max(), n_samples, S.ravel()
+        return z.ravel(), min(m,n), max(m,n), S.max(), n_samples, S.ravel(), A, B
      
     aDim, bDim = A.ndim,B.ndim
     assert aDim == bDim, "A and B does not have same dimensions!"
@@ -358,25 +378,26 @@ def GreenIntCuda(A,B, return_dperm=False, batch_size=None):
     a_n, b_n = A.shape[0], B.shape[0]
     assert a_n == b_n, "A and B does not have the same amount of experiments!"
 
-
-    _, _, _, Smax, _, _ =  GreenIntDataPreProcess(A,B)
+    _, _, _, Smax, _, _, _, _ =  GreenIntDataPreProcess(A,B)
 
     if not batch_size:
         a_batch_size, b_batch_size = A.shape[0], B.shape[0]
     else:
+        batch_size = int(batch_size)
+
         assert batch_size <= A.shape[0], "Batch-size larger than number of examples."
         a_batch_size, b_batch_size = batch_size, batch_size
 
     pdist_list = list()
     p_val_list = list()
     for a,b in zip(batch(A,a_batch_size), batch(B,b_batch_size)):
-        z, m, n, _, n_samples, S =  GreenIntDataPreProcess(a,b)
+        z, m, n, _, n_samples, S, a_norm, b_norm =  GreenIntDataPreProcess(a,b)
     
         z = z.astype(np.uint32)
         S = S.astype(np.int32)
     
         NN = np.array(greenCUDA(z, S, int(m), int(n), int(Smax), int(n_samples))).reshape(n_samples, Smax+1)
-        p_values = GreenPvalInt(NN, n_samples, S, a, b, z)
+        p_values = GreenPvalInt(NN, n_samples, S, a_norm, b_norm, z)
 
         pdist_list.append(NN)
         p_val_list.append(p_values)
@@ -510,11 +531,16 @@ def GreenInt(A,B, return_dperm=False):
     
         z = np.concatenate((A,B))
         z.sort()
-        z = z - min(z)
+        add = min(z)
+
+        z -= add
+        A -= add
+        B -= add
+
         K = min(m,n)
 
         S = np.sum(z[-K:]).astype(np.int32)
-        return z, int(min(m, n)), int(max(m, n)), int(S)
+        return z, int(min(m, n)), int(max(m, n)), int(S), A, B
 
 
     def get_p(NN, a, b, S, z, midP=False):
@@ -527,9 +553,9 @@ def GreenInt(A,B, return_dperm=False):
         """
 
         if len(a)>len(b):
-            score = (b - np.min(z)).sum()
+            score = b.sum()
         else:
-            score = (a - np.min(z)).sum()
+            score = a.sum()
             
         if midP:
             one_side = NN[score] / 2 
@@ -555,10 +581,10 @@ def GreenInt(A,B, return_dperm=False):
     p_val_list = list()
     for a, b in zip(A, B):
 
-        z, m, n, S = getDataGreen(a, b)
+        z, m, n, S, a_norm, b_norm = getDataGreen(a, b)
 
         NN = np.array(Green(z, m, n, S))
-        p_val = get_p(NN, a, b, S, z)
+        p_val = get_p(NN, a_norm, b_norm, S, z)
         
         pdist_list.append(NN)
         p_val_list.append(p_val)
@@ -597,13 +623,17 @@ def GreenIntMultiThread(A,B, return_dperm=False):
     
         z = np.concatenate((A,B))
         z.sort()
-        z = z - min(z)
-        S = z[m:].sum()
+        add = min(z)
 
+        z -= add
+        A -= add
+        B -= add
+
+        S = z[m:].sum()
         K = min(m,n)
 
         S = np.sum(z[-K:]).astype(np.int32)
-        return z, int(min(m, n)), int(max(m, n)), int(S)
+        return z, int(min(m, n)), int(max(m, n)), int(S), A, B
 
     def get_p(NN, a, b, S, z, midP=False):
         """Calculate p-value for each sub-array
@@ -614,9 +644,9 @@ def GreenIntMultiThread(A,B, return_dperm=False):
             p-values
         """
         if len(a)>len(b):
-            score = (b- np.min(z)).sum()
+            score = b.sum()
         else:
-            score = (a - np.min(z)).sum()
+            score = a.sum()
             
         if midP:
             one_side = NN[score] / 2 
@@ -642,10 +672,10 @@ def GreenIntMultiThread(A,B, return_dperm=False):
     p_val_list = list()
     for a, b in zip(A, B):
 
-        z, m, n, S = getDataGreen(a, b)
+        z, m, n, S, a_norm, b_norm = getDataGreen(a, b)
 
         NN = np.array(GreenOpenMP(z, m, n, S))
-        p_val = get_p(NN, a, b, S, z)
+        p_val = get_p(NN, a_norm, b_norm, S, z)
         
         pdist_list.append(NN)
         p_val_list.append(p_val)

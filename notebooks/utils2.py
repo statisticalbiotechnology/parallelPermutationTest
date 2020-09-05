@@ -524,13 +524,13 @@ def relError(x,y):
 def frac(x,y):
     return x / y
 
-def exactTest(A,B, bins=10, one_side=False):
+''' def exactTest(A,B, bins=10, one_side=False):
     SGM = significance_of_mean_cuda(bins, dtype_v=np.uint32,dtype_A=np.float64, verbose=False)
     SGM.run(np.asarray(A),np.asarray(B), midP=True)
     if one_side:
         return SGM.get_p_values()
     else:
-        return [2 * min( p, (1-p)) for p in SGM.get_p_values()]
+        return [2 * min( p, (1-p)) for p in SGM.get_p_values()] '''
 
 def MWU(A, B, one_side=False):
     p_mw = list()
