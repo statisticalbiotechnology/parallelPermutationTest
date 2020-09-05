@@ -21,9 +21,6 @@ permutationTestCuda.egg-info
 dist
 .pypirc
 notebooks/data
-notebooks/6. Real data.ipynb
-notebooks/Experiment 8_OLD – MCvsParallelGreen.ipynb
-notebooks/old_Experiment 5 – Calibration.ipynb
-notebooks/Untitled.ipynb
-notebooks/utils2.py
+notebooks/oldNotebooks
+notebooks/__pycache__
 *.egg
