@@ -167,6 +167,10 @@ def memoryPlotSNS(ALLTimeList, names, variables, binVar=False, log=False, path=N
         x, y = getScatterData(N,Time, sampleRangeMax, batchsize)
         plt.scatter(y, x, marker="o", color=palette[n])
 
+    if path:   
+        fig = snsPlot.get_figure()
+        fig.savefig(path)
+
 def SNSMultipleboxPlot(data, name, Bin, log=True, 
                        path=None, test_type="setSize", relError=True, dashed=False,
                        ylim=False):
