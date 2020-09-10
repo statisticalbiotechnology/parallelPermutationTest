@@ -249,7 +249,8 @@ def SNSMultipleboxPlot(data, name, Bin, log=True,
 
         plt.yticks(RANGE, 10.0**RANGE)
 
-        
+    
+
         
     if test_type=="setSize":
         plt.legend().set_title('')
@@ -266,7 +267,7 @@ def SNSMultipleboxPlot(data, name, Bin, log=True,
         plt.yticks(size = 25)
         
     
-
+    plt.setp(ax.get_legend().get_texts(), fontsize='32') # for legend text
     
     if path:
         fig = snsPlot.get_figure()
@@ -370,6 +371,73 @@ def timePlotSNSMC(TimeList_list, NameList, sampleShape, y_label , x_label , pale
     leg_lines[5].set_linestyle("--")
     leg_lines[6].set_linestyle("--")
 
+    
+    if path:   
+        fig = snsPlot.get_figure()
+        fig.savefig(path)
+
+def log_vs_log_plot(TimeList_list, NameList, sampleShape, y_label , x_label ,log=False, path=None,):
+    """Create SNS timeseries-plot"""
+    #a4_dims = (11.7*2, 8.27)
+    #fig, ax = plt.subplots(figsize=a4_dims)
+    
+
+    
+    sns.set(style="white")
+    sns.set_context("talk")
+    
+    for i, (time_list, name) in enumerate(zip(TimeList_list, NameList)):
+        if log:
+            df = preparePandas(np.log10(time_list), sampleShape, name)
+        else:
+            df = preparePandas(time_list, sampleShape, name)
+            
+        if i ==0:
+            data = df
+        else:
+            data += df
+    pdData = pd.DataFrame(data, columns=['Method', y_label,'bins'])
+    
+
+    if log:        
+        MAX = max(pdData[y_label])
+        MIN = min(pdData[y_label])
+
+        RANGE = np.arange(np.floor(MIN), np.ceil(MAX))
+        snsPlot = sns.lineplot(x="bins", y=y_label,
+             hue="Method",
+             data=pdData)#.set(yticks = RANGE, yticklabels=10**RANGE)
+        plt.yticks(RANGE, 10.0**RANGE)
+        
+        
+    else:
+        g = sns.lmplot(x="bins", y=y_label,
+             hue="Method",
+             data=pdData,scatter_kws={"s": 15}, fit_reg=False, height=7)
+    
+    g._legend.remove()
+    plt.xlabel(x_label, fontsize=20)
+    plt.ylabel(y_label, fontsize=20)
+    
+    
+    axes = g.axes
+    
+    sns.set_style("ticks")
+    sns.despine()
+    g.fig.tight_layout()
+    
+    
+    plt.legend().set_title('')
+    plt.legend(loc=2,prop={'size': 24})
+    plt.xticks(size = 24)
+    plt.yticks(size = 24)
+
+    
+    plt.xticks(size = 20)
+    plt.yticks(size = 20)
+    plt.tight_layout()
+    
+    
     
     if path:   
         fig = snsPlot.get_figure()
