@@ -254,8 +254,8 @@ def SNSMultipleboxPlot(data, name, Bin, log=True,
         
     if test_type=="setSize":
         plt.legend().set_title('')
-    else:
         plt.setp(ax.get_legend().get_texts(), fontsize='32') # for legend text
+        
     
 
     if ylim:
