@@ -376,6 +376,7 @@ def timePlotSNSMC(TimeList_list, NameList, sampleShape, y_label , x_label , pale
         fig = snsPlot.get_figure()
         fig.savefig(path)
 
+
 def log_vs_log_plot(TimeList_list, NameList, sampleShape, y_label , x_label ,log=False, path=None,):
     """Create SNS timeseries-plot"""
     #a4_dims = (11.7*2, 8.27)
@@ -437,8 +438,13 @@ def log_vs_log_plot(TimeList_list, NameList, sampleShape, y_label , x_label ,log
     plt.yticks(size = 20)
     plt.tight_layout()
     
+    mul = 5
+    low = min(sampleShape)/2
+    hi = max(sampleShape)
     
+    plt.plot([low,hi],[low,hi], "k", linewidth=1)
+   
     
     if path:   
-        fig = snsPlot.get_figure()
-        fig.savefig(path)
+        g.savefig(path)
+
